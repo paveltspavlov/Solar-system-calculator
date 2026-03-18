@@ -189,13 +189,25 @@
         .sources-list li .src-range { color: var(--accent); font-weight: 500; }
         /* Inline editable unit price */
         .hw-table .unit-price-input {
-            width: 70px; background: var(--bg); border: 1px solid var(--border);
-            border-radius: 4px; padding: 3px 6px; color: var(--accent); font-size: 0.82rem;
-            text-align: right; font-weight: 600;
+            width: 80px; background: rgba(56,189,248,0.08); border: 1px solid var(--accent);
+            border-radius: 6px; padding: 5px 8px; color: var(--accent); font-size: 0.85rem;
+            text-align: right; font-weight: 600; cursor: text;
+            transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
         }
-        .hw-table .unit-price-input:focus { outline: none; border-color: var(--primary); }
+        .hw-table .unit-price-input:hover {
+            background: rgba(56,189,248,0.14); border-color: var(--primary);
+        }
+        .hw-table .unit-price-input:focus {
+            outline: none; border-color: var(--primary);
+            background: rgba(245,158,11,0.10);
+            box-shadow: 0 0 0 2px rgba(245,158,11,0.25);
+        }
         .hw-table .unit-price-cell { white-space: nowrap; }
         .hw-table th.th-unitprice { text-align: right; }
+        .edit-hint {
+            text-align: center; font-size: 0.78rem; color: var(--accent);
+            margin-bottom: 10px; opacity: 0.8;
+        }
         .btn-recalc {
             display: inline-block; margin-top: 10px; padding: 8px 20px;
             border: 1px solid var(--primary); border-radius: 8px; background: transparent;
@@ -462,6 +474,7 @@
                 </div>
             </div>
             <div id="detailedView">
+                <div class="edit-hint" id="editHint" style="display:none" data-t="edit_hint">Click any unit price to edit it, then press "Recalculate" to update all totals</div>
                 <table class="hw-table" id="hwTable"></table>
                 <div style="text-align:center">
                     <button class="btn-recalc hidden" id="recalcBtn" onclick="recalcFromPrices()" data-t="btn_recalc">Recalculate with Custom Prices</button>
@@ -704,6 +717,7 @@ const T = {
     exc_optimizers: "Power Optimizers",
     lbl_optimizers: "Power Optimizers?",
     btn_recalc: "Recalculate with Custom Prices",
+    edit_hint: "Click any blue unit price to edit it, then press \"Recalculate\" to update all totals",
     // Sources
     src_title: "Price Sources & References",
     src_panels_label: "Solar Panels (mono-facial):",
@@ -800,6 +814,7 @@ const T = {
     exc_optimizers: "Оптимизатори на мощност",
     lbl_optimizers: "Оптимизатори на мощност?",
     btn_recalc: "Преизчисли с нови цени",
+    edit_hint: "Кликнете върху синята цена за единица, за да я редактирате, след което натиснете \"Преизчисли\"",
     // Sources
     src_title: "Източници на цени и референции",
     src_panels_label: "Соларни панели (монофациални):",
@@ -1285,6 +1300,7 @@ function calculate() {
 //  EDITABLE HARDWARE TABLE
 // ══════════════════════════════════════════════════════════
 function renderHwTable(hwItems, excl, equipCost, installCost, totalCost, excludedTotal) {
+    document.getElementById('editHint').style.display = '';
     let hwRows = `<tr><th>${t('th_component')}</th><th>${t('th_qty')}</th><th class="th-unitprice">${t('th_unitprice')}</th><th style="text-align:right">${t('th_cost')}</th></tr>`;
     let lastGroup = '';
     hwItems.forEach((item, idx) => {
