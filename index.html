@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">Solar Farm Calculator – Bulgaria</title>
+    <style>
+        :root {
+            --primary: #f59e0b;
+            --primary-dark: #d97706;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --border: #334155;
+            --radius: 12px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6;
+        }
+        /* Ad banner */
+        .ad-banner {
+            width: 100%; min-height: 90px; background: #1a1a2e;
+            border-bottom: 1px solid var(--border); display: flex;
+            align-items: center; justify-content: center; text-align: center;
+            color: var(--text-muted); font-size: 0.8rem;
+        }
+        .ad-banner .ad-slot {
+            width: 100%; max-width: 728px; min-height: 90px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(255,255,255,0.03); border-radius: 4px; padding: 8px;
+        }
+        .container { max-width: 960px; margin: 0 auto; padding: 16px; }
+        header {
+            text-align: center; padding: 24px 16px 16px;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border-bottom: 1px solid var(--border); position: relative;
+        }
+        header h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; margin-bottom: 4px;
+        }
+        header p { color: var(--text-muted); font-size: 0.95rem; }
+        .lang-switch {
+            position: absolute; top: 16px; right: 16px;
+            display: flex; gap: 4px; background: var(--bg);
+            border-radius: 8px; border: 1px solid var(--border); overflow: hidden;
+        }
+        .lang-btn {
+            padding: 6px 14px; border: none; background: transparent;
+            color: var(--text-muted); font-size: 0.82rem; cursor: pointer;
+            font-weight: 600; transition: all 0.2s;
+        }
+        .lang-btn.active { background: var(--primary); color: #000; }
+        .card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 24px; margin-bottom: 16px;
+        }
+        .card h2 {
+            font-size: 1.1rem; margin-bottom: 16px; color: var(--primary);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .card h2 .icon { font-size: 1.2rem; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group.full { grid-column: 1 / -1; }
+        .form-group.third { }
+        .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+        label { font-size: 0.82rem; color: var(--text-muted); font-weight: 500; }
+        input, select {
+            background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+            padding: 10px 12px; color: var(--text); font-size: 0.92rem; transition: border-color 0.2s;
+        }
+        input:focus, select:focus { outline: none; border-color: var(--primary); }
+        select { cursor: pointer; }
+        .toggle-group {
+            display: flex; background: var(--bg); border-radius: 8px;
+            overflow: hidden; border: 1px solid var(--border);
+        }
+        .toggle-btn {
+            flex: 1; padding: 10px 12px; border: none; background: transparent;
+            color: var(--text-muted); font-size: 0.82rem; cursor: pointer;
+            transition: all 0.2s; font-weight: 500;
+        }
+        .toggle-btn.active { background: var(--primary); color: #000; }
+        .btn-calculate {
+            width: 100%; padding: 14px; border: none; border-radius: var(--radius);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: #000; font-size: 1.05rem; font-weight: 700; cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s; margin-top: 8px;
+        }
+        .btn-calculate:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(245,158,11,0.3); }
+        .btn-calculate:active { transform: translateY(0); }
+        #results { display: none; }
+        .results-header { text-align: center; padding: 20px 0 8px; }
+        .results-header h2 { font-size: 1.3rem; color: var(--primary); }
+        .stat-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px; margin-bottom: 16px;
+        }
+        .stat-card {
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 14px; text-align: center;
+        }
+        .stat-card .value { font-size: 1.4rem; font-weight: 700; color: var(--accent); }
+        .stat-card .label { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+        .stat-card.highlight { border-color: var(--primary); }
+        .stat-card.highlight .value { color: var(--primary); }
+        .stat-card.success .value { color: var(--success); }
+        .view-toggle { display: flex; justify-content: center; margin-bottom: 16px; }
+        .view-toggle .toggle-group { width: auto; }
+        .view-toggle .toggle-btn { padding: 8px 20px; }
+        .hw-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+        .hw-table th, .hw-table td {
+            padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--border);
+        }
+        .hw-table th { color: var(--text-muted); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; }
+        .hw-table td:nth-child(2) { text-align: center; }
+        .hw-table td:last-child { text-align: right; font-weight: 600; }
+        .hw-table tr.total { border-top: 2px solid var(--primary); }
+        .hw-table tr.total td { font-weight: 700; color: var(--primary); font-size: 0.95rem; border-bottom: none; }
+        .hw-table tr.subtotal td { color: var(--accent); font-weight: 600; font-style: italic; }
+        .chart-container { width: 100%; overflow-x: auto; padding: 8px 0; }
+        .bar-chart { display: flex; align-items: flex-end; gap: 3px; height: 200px; padding: 0 4px; min-width: fit-content; }
+        .bar-col { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 28px; }
+        .bar { width: 100%; min-width: 22px; border-radius: 4px 4px 0 0; transition: height 0.4s; }
+        .bar.negative { background: var(--danger); opacity: 0.7; }
+        .bar.positive { background: var(--success); opacity: 0.8; }
+        .bar.breakeven { background: var(--primary); }
+        .bar-label { font-size: 0.65rem; color: var(--text-muted); }
+        .monthly-chart { display: flex; align-items: flex-end; gap: 6px; height: 160px; padding: 0 4px; }
+        .month-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .month-bar { width: 100%; border-radius: 4px 4px 0 0; background: linear-gradient(to top, var(--primary-dark), var(--primary)); transition: height 0.4s; }
+        .month-label { font-size: 0.68rem; color: var(--text-muted); }
+        .month-value { font-size: 0.62rem; color: var(--text); font-weight: 600; }
+        .info-box {
+            background: rgba(56,189,248,0.08); border: 1px solid rgba(56,189,248,0.2);
+            border-radius: 8px; padding: 12px 16px; font-size: 0.85rem; color: var(--accent); margin-top: 12px;
+        }
+        .info-box strong { color: var(--text); }
+        .disclaimer {
+            text-align: center; font-size: 0.75rem; color: var(--text-muted);
+            padding: 24px 16px; border-top: 1px solid var(--border); margin-top: 16px;
+        }
+        .section-note {
+            font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; font-style: italic;
+        }
+        .bifacial-note {
+            background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2);
+            border-radius: 8px; padding: 10px 14px; font-size: 0.82rem; color: var(--primary);
+            margin-top: 10px;
+        }
+        /* Checkboxes */
+        .exclude-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px;
+        }
+        .exclude-item {
+            display: flex; align-items: center; gap: 8px; cursor: pointer;
+            font-size: 0.85rem; color: var(--text); padding: 6px 0;
+        }
+        .exclude-item input[type="checkbox"] {
+            width: 18px; height: 18px; accent-color: var(--primary);
+            cursor: pointer; flex-shrink: 0;
+        }
+        .exclude-item.excluded { color: var(--text-muted); text-decoration: line-through; }
+        /* Sources section */
+        .sources-section {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 24px; margin-top: 16px;
+        }
+        .sources-section h3 {
+            font-size: 1rem; color: var(--primary); margin-bottom: 12px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .sources-list { list-style: none; padding: 0; }
+        .sources-list li {
+            padding: 8px 0; border-bottom: 1px solid var(--border);
+            font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;
+        }
+        .sources-list li:last-child { border-bottom: none; }
+        .sources-list li strong { color: var(--text); font-weight: 600; }
+        .sources-list li .src-range { color: var(--accent); font-weight: 500; }
+        /* Inline editable unit price */
+        .hw-table .unit-price-input {
+            width: 70px; background: var(--bg); border: 1px solid var(--border);
+            border-radius: 4px; padding: 3px 6px; color: var(--accent); font-size: 0.82rem;
+            text-align: right; font-weight: 600;
+        }
+        .hw-table .unit-price-input:focus { outline: none; border-color: var(--primary); }
+        .hw-table .unit-price-cell { white-space: nowrap; }
+        .hw-table th.th-unitprice { text-align: right; }
+        .btn-recalc {
+            display: inline-block; margin-top: 10px; padding: 8px 20px;
+            border: 1px solid var(--primary); border-radius: 8px; background: transparent;
+            color: var(--primary); font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-recalc:hover { background: var(--primary); color: #000; }
+        .hidden { display: none !important; }
+        @media (max-width: 600px) {
+            .exclude-grid { grid-template-columns: 1fr; }
+            .form-grid, .form-grid-3 { grid-template-columns: 1fr; }
+            .form-group.full, .form-group.third { grid-column: auto; }
+            header h1 { font-size: 1.3rem; }
+            .stat-grid { grid-template-columns: 1fr 1fr; }
+            .card { padding: 16px; }
+            .bar-chart { height: 160px; }
+            .lang-switch { top: 8px; right: 8px; }
+            .lang-btn { padding: 5px 10px; font-size: 0.75rem; }
+        }
+        html { scroll-behavior: smooth; }
+    </style>
+</head>
+<body>
+
+<!-- Google Ads Banner -->
+<div class="ad-banner">
+    <div class="ad-slot" id="adSlot">
+        <!-- Replace the comment below with your Google AdSense code -->
+        <!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script> -->
+        <!-- <ins class="adsbygoogle" style="display:inline-block;width:728px;height:90px" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="XXXXXXXXXX"></ins> -->
+        <!-- <script>(adsbygoogle = window.adsbygoogle || []).push({});</script> -->
+        <span data-t="ad_placeholder">Ad Space – Replace with your Google AdSense code</span>
+    </div>
+</div>
+
+<header>
+    <div class="lang-switch">
+        <button class="lang-btn active" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" onclick="setLang('bg')">BG</button>
+    </div>
+    <h1 data-t="title">Solar Farm Calculator</h1>
+    <p data-t="subtitle">Design & estimate solar systems for homes in Bulgaria</p>
+</header>
+
+<div class="container">
+
+    <!-- PROPERTY -->
+    <div class="card">
+        <h2><span class="icon">&#9752;</span> <span data-t="sec_property">Property Details</span></h2>
+        <div class="form-grid">
+            <div class="form-group">
+                <label data-t="lbl_proptype" for="propertyType">Property Type</label>
+                <select id="propertyType" onchange="updateDefaults()">
+                    <option value="single" data-t="opt_single">Single-Family Home</option>
+                    <option value="multi" data-t="opt_multi">Multi-Family Building</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label data-t="lbl_units" for="units">Number of Units</label>
+                <input type="number" id="units" value="1" min="1" max="200" onchange="updateDefaults()">
+            </div>
+            <div class="form-group">
+                <label data-t="lbl_oblast" for="oblast">Oblast (Province)</label>
+                <select id="oblast" onchange="populateMunicipalities()"></select>
+            </div>
+            <div class="form-group">
+                <label data-t="lbl_municipality" for="municipality">Municipality</label>
+                <select id="municipality"></select>
+            </div>
+            <div class="form-group">
+                <label data-t="lbl_roofarea" for="roofArea">Available Area (m²)</label>
+                <input type="number" id="roofArea" value="50" min="10" max="10000" step="5">
+            </div>
+            <div class="form-group">
+                <label data-t="lbl_consumption" for="consumption">Monthly Electricity Consumption (kWh)</label>
+                <input type="number" id="consumption" value="350" min="50" max="100000" step="10">
+            </div>
+        </div>
+    </div>
+
+    <!-- INSTALLATION TYPE -->
+    <div class="card">
+        <h2><span class="icon">&#127968;</span> <span data-t="sec_install">Installation Type</span></h2>
+        <div class="form-grid">
+            <div class="form-group full">
+                <label data-t="lbl_mounttype">Panel Mounting</label>
+                <div class="toggle-group">
+                    <button class="toggle-btn active" data-value="roof" onclick="toggleMount(this)" data-t="opt_roof">Roof-Mounted</button>
+                    <button class="toggle-btn" data-value="ground" onclick="toggleMount(this)" data-t="opt_ground">Ground / Yard (Elevated Structure)</button>
+                </div>
+            </div>
+            <div class="form-group" id="roofOrientGroup">
+                <label data-t="lbl_orient" for="roofOrientation">Roof Orientation</label>
+                <select id="roofOrientation">
+                    <option value="south" data-t="opt_south">South (optimal)</option>
+                    <option value="southeast" data-t="opt_se">Southeast / Southwest</option>
+                    <option value="east" data-t="opt_ew">East / West</option>
+                    <option value="flat" data-t="opt_flat">Flat roof</option>
+                </select>
+            </div>
+            <div class="form-group" id="roofTiltGroup">
+                <label data-t="lbl_tilt" for="roofTilt">Roof Tilt Angle (°)</label>
+                <input type="number" id="roofTilt" value="30" min="0" max="60" step="5">
+            </div>
+        </div>
+        <div class="bifacial-note" id="bifacialNote" style="display:none">
+            <span data-t="bifacial_info">&#9728; Ground-mounted systems allow bifacial (double-sided) panels that capture reflected light from below, yielding 5–15% extra energy. The calculator will use bifacial panels for this configuration.</span>
+        </div>
+    </div>
+
+    <!-- ELECTRICITY PRICING -->
+    <div class="card">
+        <h2><span class="icon">&#9889;</span> <span data-t="sec_elecprice">Electricity Pricing</span></h2>
+        <p class="section-note" data-t="note_tariff">Enter your electricity tariff rates. If you have a single rate, enter the same value for both day and night.</p>
+        <div class="form-grid-3">
+            <div class="form-group">
+                <label data-t="lbl_dayprice" for="dayPrice">Day Rate (EUR/kWh)</label>
+                <input type="number" id="dayPrice" value="0.14" min="0.01" max="1.00" step="0.005">
+            </div>
+            <div class="form-group">
+                <label data-t="lbl_nightprice" for="nightPrice">Night Rate (EUR/kWh)</label>
+                <input type="number" id="nightPrice" value="0.07" min="0.01" max="1.00" step="0.005">
+            </div>
+            <div class="form-group">
+                <label data-t="lbl_dayratio" for="dayRatio">Day Consumption (%)</label>
+                <input type="number" id="dayRatio" value="65" min="10" max="95" step="5">
+            </div>
+        </div>
+    </div>
+
+    <!-- SYSTEM OPTIONS -->
+    <div class="card">
+        <h2><span class="icon">&#9881;</span> <span data-t="sec_system">System Configuration</span></h2>
+        <div class="form-grid">
+            <div class="form-group">
+                <label data-t="lbl_panelw" for="panelWattage">Panel Wattage (W)</label>
+                <select id="panelWattage">
+                    <option value="410">410W (Standard)</option>
+                    <option value="450" selected>450W (High Efficiency)</option>
+                    <option value="500">500W (Premium)</option>
+                    <option value="550">550W (Ultra Premium)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label data-t="lbl_inverter" for="inverterType">Inverter Type</label>
+                <select id="inverterType">
+                    <option value="string" data-t="opt_string">String Inverter (Budget)</option>
+                    <option value="hybrid" selected data-t="opt_hybrid">Hybrid Inverter (Recommended)</option>
+                    <option value="micro" data-t="opt_micro">Micro Inverters (Premium)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label data-t="lbl_battery">Include Battery Storage?</label>
+                <div class="toggle-group">
+                    <button class="toggle-btn" data-value="no" onclick="toggleBattery(this)" data-t="opt_no">No</button>
+                    <button class="toggle-btn active" data-value="yes" onclick="toggleBattery(this)" data-t="opt_yes">Yes</button>
+                </div>
+            </div>
+            <div class="form-group" id="batteryCapGroup">
+                <label data-t="lbl_batcap" for="batteryCap">Battery Capacity (kWh)</label>
+                <input type="number" id="batteryCap" value="10" min="5" max="200" step="5">
+            </div>
+            <div class="form-group">
+                <label data-t="lbl_optimizers">Power Optimizers?</label>
+                <div class="toggle-group">
+                    <button class="toggle-btn active" data-value="no" onclick="toggleOptimizers(this)" data-t="opt_no">No</button>
+                    <button class="toggle-btn" data-value="yes" onclick="toggleOptimizers(this)" data-t="opt_yes">Yes</button>
+                </div>
+            </div>
+            <div class="form-group full">
+                <label data-t="lbl_mode">Energy Mode</label>
+                <div class="toggle-group">
+                    <button class="toggle-btn active" data-value="net" onclick="toggleMode(this)" data-t="opt_net">Net Metering</button>
+                    <button class="toggle-btn" data-value="self" onclick="toggleMode(this)" data-t="opt_self">Self-Consumption Only</button>
+                </div>
+            </div>
+        </div>
+        <div class="info-box" id="modeInfo">
+            <span data-t="info_net"><strong>Net Metering:</strong> Surplus energy is exported to the grid. Your meter runs backwards, offsetting future consumption at the retail rate. Bulgarian legislation allows net metering for residential systems up to 30 kW.</span>
+        </div>
+    </div>
+
+    <!-- FINANCIAL -->
+    <div class="card">
+        <h2><span class="icon">&#128176;</span> <span data-t="sec_financial">Financial Parameters</span></h2>
+        <div class="form-grid">
+            <div class="form-group">
+                <label data-t="lbl_ann_increase" for="annualIncrease">Annual Electricity Price Increase (%)</label>
+                <input type="number" id="annualIncrease" value="3" min="0" max="20" step="0.5">
+            </div>
+            <div class="form-group">
+                <label data-t="lbl_degradation" for="degradation">Annual Panel Degradation (%)</label>
+                <input type="number" id="degradation" value="0.5" min="0" max="2" step="0.1">
+            </div>
+            <div class="form-group">
+                <label data-t="lbl_lifetime" for="systemLife">System Lifetime (years)</label>
+                <input type="number" id="systemLife" value="25" min="10" max="40" step="1">
+            </div>
+            <div class="form-group">
+                <label data-t="lbl_maintenance" for="maintenanceCost">Annual Maintenance (EUR/year)</label>
+                <input type="number" id="maintenanceCost" value="100" min="0" max="5000" step="10">
+            </div>
+        </div>
+    </div>
+
+    <!-- COST EXCLUSIONS -->
+    <div class="card">
+        <h2><span class="icon">&#9986;</span> <span data-t="sec_exclude">Exclude Costs (DIY Options)</span></h2>
+        <p class="section-note" data-t="note_exclude">Uncheck items you will handle yourself or don't need. Excluded costs will be removed from the total investment and payback calculation.</p>
+        <div class="exclude-grid">
+            <label class="exclude-item">
+                <input type="checkbox" id="exc_labor" onchange="updateExcludeStyle(this)">
+                <span data-t="exc_labor">Installation Labor</span>
+            </label>
+            <label class="exclude-item">
+                <input type="checkbox" id="exc_design" onchange="updateExcludeStyle(this)">
+                <span data-t="exc_design">System Design & Engineering</span>
+            </label>
+            <label class="exclude-item">
+                <input type="checkbox" id="exc_permits" onchange="updateExcludeStyle(this)">
+                <span data-t="exc_permits">Permits & Grid Connection</span>
+            </label>
+            <label class="exclude-item">
+                <input type="checkbox" id="exc_mounting" onchange="updateExcludeStyle(this)">
+                <span data-t="exc_mounting">Mounting Structure</span>
+            </label>
+            <label class="exclude-item">
+                <input type="checkbox" id="exc_wiring" onchange="updateExcludeStyle(this)">
+                <span data-t="exc_wiring">Wiring & Electrical Components</span>
+            </label>
+            <label class="exclude-item">
+                <input type="checkbox" id="exc_meter" onchange="updateExcludeStyle(this)">
+                <span data-t="exc_meter">Smart Meter & Monitoring</span>
+            </label>
+            <label class="exclude-item">
+                <input type="checkbox" id="exc_optimizers" onchange="updateExcludeStyle(this)">
+                <span data-t="exc_optimizers">Power Optimizers</span>
+            </label>
+            <label class="exclude-item">
+                <input type="checkbox" id="exc_maintenance" onchange="updateExcludeStyle(this)">
+                <span data-t="exc_maintenance">Annual Maintenance</span>
+            </label>
+        </div>
+    </div>
+
+    <button class="btn-calculate" onclick="calculate()" data-t="btn_calc">Calculate Solar System</button>
+
+    <!-- RESULTS -->
+    <div id="results">
+        <div class="results-header"><h2 data-t="res_title">System Design & Financial Projection</h2></div>
+        <div class="stat-grid" id="statsGrid"></div>
+
+        <div class="card">
+            <h2><span class="icon">&#9728;</span> <span data-t="res_monthly">Estimated Monthly Production (kWh)</span></h2>
+            <div class="monthly-chart" id="monthlyChart"></div>
+        </div>
+
+        <div class="card">
+            <h2><span class="icon">&#128295;</span> <span data-t="res_hardware">Complete Hardware & Installation Costs</span></h2>
+            <div class="view-toggle">
+                <div class="toggle-group">
+                    <button class="toggle-btn active" onclick="toggleView(this,'detailed')" data-t="opt_detailed">Detailed</button>
+                    <button class="toggle-btn" onclick="toggleView(this,'simple')" data-t="opt_simplified">Simplified</button>
+                </div>
+            </div>
+            <div id="detailedView">
+                <table class="hw-table" id="hwTable"></table>
+                <div style="text-align:center">
+                    <button class="btn-recalc hidden" id="recalcBtn" onclick="recalcFromPrices()" data-t="btn_recalc">Recalculate with Custom Prices</button>
+                </div>
+            </div>
+            <div id="simpleView" class="hidden"><div class="stat-grid" id="simpleCosts"></div></div>
+        </div>
+
+        <div class="card">
+            <h2><span class="icon">&#128200;</span> <span data-t="res_payback">Payback Projection</span></h2>
+            <div class="chart-container"><div class="bar-chart" id="paybackChart"></div></div>
+            <div id="paybackInfo" class="info-box"></div>
+        </div>
+
+        <div class="card">
+            <h2><span class="icon">&#128178;</span> <span data-t="res_summary">Financial Summary over</span> <span id="summaryYears">25</span> <span data-t="res_years">Years</span></h2>
+            <table class="hw-table" id="finTable"></table>
+        </div>
+    </div>
+
+    <!-- PRICE SOURCES -->
+    <div class="sources-section" id="sourcesSection">
+        <h3><span class="icon">&#128218;</span> <span data-t="src_title">Price Sources & References</span></h3>
+        <ul class="sources-list">
+            <li>
+                <strong data-t="src_panels_label">Solar Panels (mono-facial):</strong>
+                <span class="src-range">€0.22 – €0.34 /W</span> —
+                <span data-t="src_panels_note">Based on average wholesale and retail pricing in Bulgaria and the EU for Tier 1 manufacturers (LONGi, JA Solar, Trina Solar, Canadian Solar). Prices reflect 2025–2026 market conditions for 410W–550W modules.</span>
+            </li>
+            <li>
+                <strong data-t="src_bifacial_label">Bifacial Panels:</strong>
+                <span class="src-range">€0.28 – €0.40 /W</span> —
+                <span data-t="src_bifacial_note">Premium of ~25% over monofacial equivalents. Based on LONGi Hi-MO 5/6, Trina Vertex S+ bifacial module pricing in the European market.</span>
+            </li>
+            <li>
+                <strong data-t="src_inverter_label">Inverters:</strong>
+                <span class="src-range">€120 – €300 /kW</span> —
+                <span data-t="src_inverter_note">String inverters (Sungrow, GoodWe): ~€120/kW. Hybrid inverters (Huawei, SMA, Fronius): ~€200/kW. Micro inverters (Enphase IQ7/IQ8): ~€300/kW. Prices from European solar distributors (Krannich Solar, BayWa r.e.).</span>
+            </li>
+            <li>
+                <strong data-t="src_battery_label">Battery Storage + BMS:</strong>
+                <span class="src-range">€420 – €450 /kWh</span> —
+                <span data-t="src_battery_note">LiFePO4 batteries (BYD HVS/HVM, Pylontech US5000, Huawei LUNA2000). BMS cost included as a separate line item (€180 base + €12/kWh). Reflects 2025 European pricing.</span>
+            </li>
+            <li>
+                <strong data-t="src_mounting_label">Mounting Systems:</strong>
+                <span class="src-range">€32 – €55 /panel</span> —
+                <span data-t="src_mounting_note">Roof rails & clamps: ~€32/panel (K2 Systems, Schletter). Ground-mount galvanized steel structures: ~€55/panel + €400 base for concrete footings. Stabilizer clamps: €8–12/panel.</span>
+            </li>
+            <li>
+                <strong data-t="src_electrical_label">Electrical Components (DC/AC wiring, MC4, combiner, grounding):</strong>
+                <span class="src-range">€50 – €75 /kW</span> —
+                <span data-t="src_electrical_note">Includes 6mm² DC solar cable (€0.80–1.20/m), MC4 connectors (€2–4/pair), AC wiring with breakers, DC combiner boxes (€85/unit per 12 panels), grounding kits and Type 1+2 surge protection (SPDs). Based on Weidmüller, Phoenix Contact, and Stäubli component pricing.</span>
+            </li>
+            <li>
+                <strong data-t="src_optimizers_label">Power Optimizers:</strong>
+                <span class="src-range">€40 – €55 /panel</span> —
+                <span data-t="src_optimizers_note">Per-panel DC optimizers (SolarEdge P-series, Tigo TS4-A-O). Improve yield by 5–25% under partial shading. Pricing from European solar distributors.</span>
+            </li>
+            <li>
+                <strong data-t="src_labor_label">Installation Labor:</strong>
+                <span class="src-range">€200 – €250 /kW + €400 base</span> —
+                <span data-t="src_labor_note">Average Bulgarian market rates for certified solar installers. Ground-mount installations at the higher end due to structural work. Based on quotes from Bulgarian solar companies (Enery, Enerpoint Bulgaria, Solar Bulgaria).</span>
+            </li>
+            <li>
+                <strong data-t="src_permits_label">Permits, Grid Connection & Design:</strong>
+                <span class="src-range">€15 – €20 /kW + base fees</span> —
+                <span data-t="src_permits_note">Grid connection fees per ERE (Energy and Water Regulatory Commission) schedule. Design engineering based on typical Bulgarian project management rates. Permit fees per municipal tariffs (Наредба за присъединяване).</span>
+            </li>
+            <li>
+                <strong data-t="src_irradiance_label">Solar Irradiance Data:</strong>
+                <span class="src-range">1,300 – 1,520 kWh/m²/year</span> —
+                <span data-t="src_irradiance_note">Global Horizontal Irradiance (GHI) values per oblast from the Global Solar Atlas (World Bank / Solargis) and PVGIS (EU Joint Research Centre). Performance ratio of 0.82 applied, accounting for inverter efficiency, wiring losses, soiling, and temperature effects.</span>
+            </li>
+            <li>
+                <strong data-t="src_co2_label">CO₂ Emission Factor:</strong>
+                <span class="src-range">0.45 kg CO₂/kWh</span> —
+                <span data-t="src_co2_note">Bulgarian electricity grid emission factor based on European Environment Agency (EEA) data. Reflects Bulgaria's energy mix (coal, nuclear, hydro, renewables).</span>
+            </li>
+        </ul>
+    </div>
+
+    <div class="disclaimer" data-t="disclaimer">Estimates are based on average solar irradiance data for Bulgaria, typical hardware pricing (2025-2026), and user-provided electricity rates. Actual results may vary. Consult a certified installer for a detailed site assessment.</div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  BULGARIA OBLASTS & MUNICIPALITIES DATA
+// ══════════════════════════════════════════════════════════
+const OBLASTS = {
+  "Blagoevgrad": { irr: 1480, m: ["Bansko","Belitsa","Blagoevgrad","Garmen","Gotse Delchev","Hadzhidimovo","Kresna","Petrich","Razlog","Sandanski","Satovcha","Simitli","Strumyani","Yakoruda"] },
+  "Burgas": { irr: 1520, m: ["Aytos","Burgas","Kameno","Karnobat","Malko Tarnovo","Nesebar","Pomorie","Primorsko","Ruen","Sozopol","Sredets","Sungurlare","Tsarevo"] },
+  "Dobrich": { irr: 1420, m: ["Balchik","Dobrich","Dobrichka","General Toshevo","Kavarna","Krushari","Shabla","Tervel"] },
+  "Gabrovo": { irr: 1350, m: ["Dryanovo","Gabrovo","Sevlievo","Tryavna"] },
+  "Haskovo": { irr: 1520, m: ["Dimitrovgrad","Harmanli","Haskovo","Ivaylovgrad","Lyubimets","Madzharovo","Mineralni Bani","Simeonovgrad","Stambolovo","Svilengrad","Topolovgrad"] },
+  "Kardzhali": { irr: 1480, m: ["Ardino","Chernoochene","Dzhebel","Kardzhali","Kirkovo","Krumovgrad","Momchilgrad"] },
+  "Kyustendil": { irr: 1400, m: ["Boboshevo","Bobov Dol","Dupnitsa","Kocherinovo","Kyustendil","Nevestino","Rila","Sapareva Banya","Treklyano"] },
+  "Lovech": { irr: 1350, m: ["Apriltsi","Letnitsa","Lovech","Lukovit","Teteven","Troyan","Ugarchin","Yablanitsa"] },
+  "Montana": { irr: 1320, m: ["Berkovitsa","Boychinovtsi","Brusartsi","Chiprovtsi","Georgi Damyanovo","Lom","Medkovets","Montana","Valchedram","Varshets","Yakimovo"] },
+  "Pazardzhik": { irr: 1460, m: ["Batak","Belovo","Bratsigovo","Lesichovo","Panagyurishte","Pazardzhik","Peshtera","Rakitovo","Sarnitsa","Septemvri","Strelcha","Velingrad"] },
+  "Pernik": { irr: 1380, m: ["Breznik","Kovachevtsi","Pernik","Radomir","Tran","Zemen"] },
+  "Pleven": { irr: 1380, m: ["Belene","Cherven Bryag","Dolna Mitropoliya","Dolni Dabnik","Gulyantsi","Iskar","Knezha","Levski","Nikopol","Pleven","Pordim"] },
+  "Plovdiv": { irr: 1490, m: ["Asenovgrad","Brezovo","Hisarya","Kaloyanovo","Karlovo","Krichim","Kuklen","Laki","Maritsa","Parvomay","Perushtitsa","Plovdiv","Rakovski","Rodopi","Sadovo","Saedinenie","Sopot","Stamboliyski"] },
+  "Razgrad": { irr: 1380, m: ["Isperih","Kubrat","Loznitsa","Razgrad","Samuil","Tsar Kaloyan","Zavet"] },
+  "Ruse": { irr: 1390, m: ["Borovo","Byala","Dve Mogili","Ivanovo","Ruse","Slivo Pole","Tsenovo","Vetovo"] },
+  "Shumen": { irr: 1390, m: ["Hitrino","Kaolinovo","Kaspichan","Nikola Kozlevo","Novi Pazar","Shumen","Smyadovo","Varbitsa","Veliki Preslav","Venets"] },
+  "Silistra": { irr: 1380, m: ["Alfatar","Dulovo","Glavinitsa","Kaynardzha","Silistra","Sitovo","Tutrakan"] },
+  "Sliven": { irr: 1460, m: ["Kotel","Nova Zagora","Sliven","Tvarditsa"] },
+  "Smolyan": { irr: 1420, m: ["Banite","Borino","Chepelare","Devin","Dospat","Madan","Nedelino","Rudozem","Smolyan","Zlatograd"] },
+  "Sofia City": { irr: 1400, m: ["Stolichna"] },
+  "Sofia Province": { irr: 1380, m: ["Anton","Bozhurishte","Botevgrad","Chavdar","Chelopech","Dolna Banya","Dragoman","Elin Pelin","Etropole","Godech","Gorna Malina","Ihtiman","Koprivshtitsa","Kostenets","Kostinbrod","Mirkovo","Pirdop","Pravets","Samokov","Slivnitsa","Svoge","Zlatitsa"] },
+  "Stara Zagora": { irr: 1480, m: ["Bratya Daskalovi","Chirpan","Galabovo","Gurkovo","Kazanlak","Maglizh","Nikolaevo","Opan","Pavel Banya","Radnevo","Stara Zagora"] },
+  "Targovishte": { irr: 1380, m: ["Antonovo","Omurtag","Opaka","Popovo","Targovishte"] },
+  "Varna": { irr: 1450, m: ["Aksakovo","Avren","Beloslav","Byala","Dalgopol","Devnya","Dolni Chiflik","Provadiya","Suvorovo","Valchi Dol","Varna","Vetrino"] },
+  "Veliko Tarnovo": { irr: 1370, m: ["Elena","Gorna Oryahovitsa","Lyaskovets","Pavlikeni","Polski Trambesh","Strazhitsa","Suhindol","Svishtov","Veliko Tarnovo","Zlataritsa"] },
+  "Vidin": { irr: 1300, m: ["Belogradchik","Boynitsa","Bregovo","Chuprene","Dimovo","Gramada","Kula","Makresh","Novo Selo","Ruzhintsi","Vidin"] },
+  "Vratsa": { irr: 1330, m: ["Borovan","Byala Slatina","Hayredin","Kozloduy","Krivodol","Mezdra","Mizia","Oryahovo","Roman","Vratsa"] },
+  "Yambol": { irr: 1500, m: ["Bolyarovo","Elhovo","Straldzha","Tundzha","Yambol"] }
+};
+
+const OBLASTS_BG_MAP = {
+  "Blagoevgrad":"Благоевград","Burgas":"Бургас","Dobrich":"Добрич","Gabrovo":"Габрово",
+  "Haskovo":"Хасково","Kardzhali":"Кърджали","Kyustendil":"Кюстендил","Lovech":"Ловеч",
+  "Montana":"Монтана","Pazardzhik":"Пазарджик","Pernik":"Перник","Pleven":"Плевен",
+  "Plovdiv":"Пловдив","Razgrad":"Разград","Ruse":"Русе","Shumen":"Шумен",
+  "Silistra":"Силистра","Sliven":"Сливен","Smolyan":"Смолян","Sofia City":"София (столица)",
+  "Sofia Province":"Софийска област","Stara Zagora":"Стара Загора","Targovishte":"Търговище",
+  "Varna":"Варна","Veliko Tarnovo":"Велико Търново","Vidin":"Видин","Vratsa":"Враца","Yambol":"Ямбол"
+};
+
+const MUNICIPALITIES_BG = {
+  "Bansko":"Банско","Belitsa":"Белица","Blagoevgrad":"Благоевград","Garmen":"Гърмен","Gotse Delchev":"Гоце Делчев","Hadzhidimovo":"Хаджидимово","Kresna":"Кресна","Petrich":"Петрич","Razlog":"Разлог","Sandanski":"Сандански","Satovcha":"Сатовча","Simitli":"Симитли","Strumyani":"Струмяни","Yakoruda":"Якоруда",
+  "Aytos":"Айтос","Burgas":"Бургас","Kameno":"Камено","Karnobat":"Карнобат","Malko Tarnovo":"Малко Търново","Nesebar":"Несебър","Pomorie":"Поморие","Primorsko":"Приморско","Ruen":"Руен","Sozopol":"Созопол","Sredets":"Средец","Sungurlare":"Сунгурларе","Tsarevo":"Царево",
+  "Balchik":"Балчик","Dobrich":"Добрич","Dobrichka":"Добричка","General Toshevo":"Генерал Тошево","Kavarna":"Каварна","Krushari":"Крушари","Shabla":"Шабла","Tervel":"Тервел",
+  "Dryanovo":"Дряново","Gabrovo":"Габрово","Sevlievo":"Севлиево","Tryavna":"Трявна",
+  "Dimitrovgrad":"Димитровград","Harmanli":"Харманли","Haskovo":"Хасково","Ivaylovgrad":"Ивайловград","Lyubimets":"Любимец","Madzharovo":"Маджарово","Mineralni Bani":"Минерални бани","Simeonovgrad":"Симеоновград","Stambolovo":"Стамболово","Svilengrad":"Свиленград","Topolovgrad":"Тополовград",
+  "Ardino":"Ардино","Chernoochene":"Черноочене","Dzhebel":"Джебел","Kardzhali":"Кърджали","Kirkovo":"Кирково","Krumovgrad":"Крумовград","Momchilgrad":"Момчилград",
+  "Boboshevo":"Бобошево","Bobov Dol":"Бобов дол","Dupnitsa":"Дупница","Kocherinovo":"Кочериново","Kyustendil":"Кюстендил","Nevestino":"Невестино","Rila":"Рила","Sapareva Banya":"Сапарева баня","Treklyano":"Трекляно",
+  "Apriltsi":"Априлци","Letnitsa":"Летница","Lovech":"Ловеч","Lukovit":"Луковит","Teteven":"Тетевен","Troyan":"Троян","Ugarchin":"Угърчин","Yablanitsa":"Ябланица",
+  "Berkovitsa":"Берковица","Boychinovtsi":"Бойчиновци","Brusartsi":"Брусарци","Chiprovtsi":"Чипровци","Georgi Damyanovo":"Георги Дамяново","Lom":"Лом","Medkovets":"Медковец","Montana":"Монтана","Valchedram":"Вълчедръм","Varshets":"Вършец","Yakimovo":"Якимово",
+  "Batak":"Батак","Belovo":"Белово","Bratsigovo":"Брацигово","Lesichovo":"Лесичово","Panagyurishte":"Панагюрище","Pazardzhik":"Пазарджик","Peshtera":"Пещера","Rakitovo":"Ракитово","Sarnitsa":"Сърница","Septemvri":"Септември","Strelcha":"Стрелча","Velingrad":"Велинград",
+  "Breznik":"Брезник","Kovachevtsi":"Ковачевци","Pernik":"Перник","Radomir":"Радомир","Tran":"Трън","Zemen":"Земен",
+  "Belene":"Белене","Cherven Bryag":"Червен бряг","Dolna Mitropoliya":"Долна Митрополия","Dolni Dabnik":"Долни Дъбник","Gulyantsi":"Гулянци","Iskar":"Искър","Knezha":"Кнежа","Levski":"Левски","Nikopol":"Никопол","Pleven":"Плевен","Pordim":"Пордим",
+  "Asenovgrad":"Асеновград","Brezovo":"Брезово","Hisarya":"Хисаря","Kaloyanovo":"Калояново","Karlovo":"Карлово","Krichim":"Кричим","Kuklen":"Куклен","Laki":"Лъки","Maritsa":"Марица","Parvomay":"Първомай","Perushtitsa":"Перущица","Plovdiv":"Пловдив","Rakovski":"Раковски","Rodopi":"Родопи","Sadovo":"Садово","Saedinenie":"Съединение","Sopot":"Сопот","Stamboliyski":"Стамболийски",
+  "Isperih":"Исперих","Kubrat":"Кубрат","Loznitsa":"Лозница","Razgrad":"Разград","Samuil":"Самуил","Tsar Kaloyan":"Цар Калоян","Zavet":"Завет",
+  "Borovo":"Борово","Byala":"Бяла","Dve Mogili":"Две могили","Ivanovo":"Иваново","Ruse":"Русе","Slivo Pole":"Сливо поле","Tsenovo":"Ценово","Vetovo":"Ветово",
+  "Hitrino":"Хитрино","Kaolinovo":"Каолиново","Kaspichan":"Каспичан","Nikola Kozlevo":"Никола Козлево","Novi Pazar":"Нови пазар","Shumen":"Шумен","Smyadovo":"Смядово","Varbitsa":"Върбица","Veliki Preslav":"Велики Преслав","Venets":"Венец",
+  "Alfatar":"Алфатар","Dulovo":"Дулово","Glavinitsa":"Главиница","Kaynardzha":"Кайнарджа","Silistra":"Силистра","Sitovo":"Ситово","Tutrakan":"Тутракан",
+  "Kotel":"Котел","Nova Zagora":"Нова Загора","Sliven":"Сливен","Tvarditsa":"Твърдица",
+  "Banite":"Баните","Borino":"Борино","Chepelare":"Чепеларе","Devin":"Девин","Dospat":"Доспат","Madan":"Мадан","Nedelino":"Неделино","Rudozem":"Рудозем","Smolyan":"Смолян","Zlatograd":"Златоград",
+  "Stolichna":"Столична",
+  "Anton":"Антон","Bozhurishte":"Божурище","Botevgrad":"Ботевград","Chavdar":"Чавдар","Chelopech":"Челопеч","Dolna Banya":"Долна баня","Dragoman":"Драгоман","Elin Pelin":"Елин Пелин","Etropole":"Етрополе","Godech":"Годеч","Gorna Malina":"Горна Малина","Ihtiman":"Ихтиман","Koprivshtitsa":"Копривщица","Kostenets":"Костенец","Kostinbrod":"Костинброд","Mirkovo":"Мирково","Pirdop":"Пирдоп","Pravets":"Правец","Samokov":"Самоков","Slivnitsa":"Сливница","Svoge":"Своге","Zlatitsa":"Златица",
+  "Bratya Daskalovi":"Братя Даскалови","Chirpan":"Чирпан","Galabovo":"Гълъбово","Gurkovo":"Гурково","Kazanlak":"Казанлък","Maglizh":"Мъглиж","Nikolaevo":"Николаево","Opan":"Опан","Pavel Banya":"Павел баня","Radnevo":"Раднево","Stara Zagora":"Стара Загора",
+  "Antonovo":"Антоново","Omurtag":"Омуртаг","Opaka":"Опака","Popovo":"Попово","Targovishte":"Търговище",
+  "Aksakovo":"Аксаково","Avren":"Аврен","Beloslav":"Белослав","Dalgopol":"Дългопол","Devnya":"Девня","Dolni Chiflik":"Долни чифлик","Provadiya":"Провадия","Suvorovo":"Суворово","Valchi Dol":"Вълчи дол","Varna":"Варна","Vetrino":"Ветрино",
+  "Elena":"Елена","Gorna Oryahovitsa":"Горна Оряховица","Lyaskovets":"Лясковец","Pavlikeni":"Павликени","Polski Trambesh":"Полски Тръмбеш","Strazhitsa":"Стражица","Suhindol":"Сухиндол","Svishtov":"Свищов","Veliko Tarnovo":"Велико Търново","Zlataritsa":"Златарица",
+  "Belogradchik":"Белоградчик","Boynitsa":"Бойница","Bregovo":"Брегово","Chuprene":"Чупрене","Dimovo":"Димово","Gramada":"Грамада","Kula":"Кула","Makresh":"Макреш","Novo Selo":"Ново село","Ruzhintsi":"Ружинци","Vidin":"Видин",
+  "Borovan":"Борован","Byala Slatina":"Бяла Слатина","Hayredin":"Хайредин","Kozloduy":"Козлодуй","Krivodol":"Криводол","Mezdra":"Мездра","Mizia":"Мизия","Oryahovo":"Оряхово","Roman":"Роман","Vratsa":"Враца",
+  "Bolyarovo":"Болярово","Elhovo":"Елхово","Straldzha":"Стралджа","Tundzha":"Тунджа","Yambol":"Ямбол"
+};
+
+// ══════════════════════════════════════════════════════════
+//  TRANSLATIONS
+// ══════════════════════════════════════════════════════════
+const T = {
+  en: {
+    title: "Solar Farm Calculator",
+    subtitle: "Design & estimate solar systems for homes in Bulgaria",
+    sec_property: "Property Details",
+    lbl_proptype: "Property Type", opt_single: "Single-Family Home", opt_multi: "Multi-Family Building",
+    lbl_units: "Number of Units",
+    lbl_oblast: "Oblast (Province)", lbl_municipality: "Municipality",
+    lbl_roofarea: "Available Area (m²)", lbl_consumption: "Monthly Electricity Consumption (kWh)",
+    sec_install: "Installation Type",
+    lbl_mounttype: "Panel Mounting", opt_roof: "Roof-Mounted", opt_ground: "Ground / Yard (Elevated Structure)",
+    lbl_orient: "Roof Orientation", opt_south: "South (optimal)", opt_se: "Southeast / Southwest", opt_ew: "East / West", opt_flat: "Flat roof",
+    lbl_tilt: "Tilt Angle (°)",
+    bifacial_info: "\u2600 Ground-mounted systems allow bifacial (double-sided) panels that capture reflected light from below, yielding 5\u201315% extra energy. The calculator will automatically use bifacial panels for this configuration.",
+    sec_elecprice: "Electricity Pricing",
+    note_tariff: "Enter your electricity tariff rates. If you have a single rate, enter the same value for both day and night.",
+    lbl_dayprice: "Day Rate (EUR/kWh)", lbl_nightprice: "Night Rate (EUR/kWh)", lbl_dayratio: "Day Consumption (%)",
+    sec_system: "System Configuration",
+    lbl_panelw: "Panel Wattage (W)", lbl_inverter: "Inverter Type",
+    opt_string: "String Inverter (Budget)", opt_hybrid: "Hybrid Inverter (Recommended)", opt_micro: "Micro Inverters (Premium)",
+    lbl_battery: "Include Battery Storage?", opt_yes: "Yes", opt_no: "No",
+    lbl_batcap: "Battery Capacity (kWh)",
+    lbl_mode: "Energy Mode", opt_net: "Net Metering", opt_self: "Self-Consumption Only",
+    info_net: "<strong>Net Metering:</strong> Surplus energy is exported to the grid. Your meter runs backwards, offsetting future consumption at the retail rate. Bulgarian legislation allows net metering for residential systems up to 30 kW.",
+    info_self: "<strong>Self-Consumption Only:</strong> All produced energy is consumed on-site or stored in batteries. Excess energy is not sold. Useful when net metering is unavailable or when maximizing self-sufficiency.",
+    sec_financial: "Financial Parameters",
+    lbl_ann_increase: "Annual Electricity Price Increase (%)", lbl_degradation: "Annual Panel Degradation (%)",
+    lbl_lifetime: "System Lifetime (years)", lbl_maintenance: "Annual Maintenance (EUR/year)",
+    btn_calc: "Calculate Solar System",
+    res_title: "System Design & Financial Projection",
+    res_monthly: "Estimated Monthly Production (kWh)",
+    res_hardware: "Complete Hardware & Installation Costs",
+    opt_detailed: "Detailed", opt_simplified: "Simplified",
+    res_payback: "Payback Projection", res_summary: "Financial Summary over", res_years: "Years",
+    disclaimer: "Estimates are based on average solar irradiance data for Bulgaria, typical hardware pricing (2025-2026), and user-provided electricity rates. Actual results may vary. Consult a certified installer for a detailed site assessment.",
+    ad_placeholder: "Ad Space \u2013 Replace with your Google AdSense code",
+    // Result labels
+    r_syssize: "System Size", r_panels: "Solar Panels", r_annual: "kWh / Year", r_invest: "Total Investment",
+    r_savings1: "Savings / Year (Yr 1)", r_payback: "Payback Period", r_roi: "Total ROI", r_co2: "CO\u2082 Saved",
+    r_yr: "yr", r_na: "N/A",
+    // Table headers
+    th_component: "Component", th_qty: "Qty", th_unitprice: "Unit Price", th_cost: "Cost (EUR)",
+    th_metric: "Metric", th_value: "Value",
+    // Hardware rows
+    hw_panels: "Solar Panels", hw_panels_bi: "Bifacial Solar Panels",
+    hw_inverter: "Inverter", hw_battery: "Battery Pack", hw_bms: "Battery Management System (BMS)",
+    hw_mounting_roof: "Roof Mounting Rails & Clamps", hw_mounting_ground: "Ground-Mount Steel Structure",
+    hw_stabilizers: "Module Stabilizers / Clamps", hw_wiring_dc: "DC Wiring & Solar Connectors (MC4)",
+    hw_wiring_ac: "AC Wiring & Breakers", hw_combiner: "DC Combiner Box",
+    hw_grounding: "Grounding Kit & Surge Protection", hw_meter: "Smart Meter & Monitoring System",
+    hw_conduit: "Cable Conduit & Trunking",
+    hw_optimizers: "Power Optimizers (SolarEdge / Tigo)",
+    hw_sub_equipment: "Equipment Subtotal", hw_sub_install: "Installation Subtotal",
+    hw_labor: "Installation Labor", hw_permits: "Permits & Grid Connection", hw_design: "System Design & Engineering",
+    hw_total: "TOTAL INVESTMENT",
+    // Simplified
+    s_equipment: "Equipment", s_install: "Installation", s_other: "Permits & Design", s_perkw: "Cost per kW",
+    // Payback
+    pb_pays: "The system pays for itself in", pb_years: "years", pb_after: "After that, you save an estimated",
+    pb_over: "over the remaining", pb_of: "years of system life.",
+    pb_note: "At current parameters, the system does not pay itself off within",
+    pb_consider: "Consider increasing system size, switching to net metering, or reducing costs.",
+    // Financial table
+    f_invest: "Total Investment", f_maint: "Total Maintenance", f_savings: "Total Savings",
+    f_net: "Net Profit / Loss", f_roi: "Return on Investment", f_payback: "Payback Period",
+    f_co2: "CO\u2082 Emissions Avoided", f_selfr: "Self-Sufficiency Ratio",
+    f_blended: "Blended Electricity Rate", f_tonnes: "tonnes",
+    // Exclusions
+    sec_exclude: "Exclude Costs (DIY Options)",
+    note_exclude: "Uncheck items you will handle yourself or don't need. Excluded costs will be removed from the total investment and payback calculation.",
+    exc_labor: "Installation Labor", exc_design: "System Design & Engineering",
+    exc_permits: "Permits & Grid Connection", exc_mounting: "Mounting Structure",
+    exc_wiring: "Wiring & Electrical Components", exc_meter: "Smart Meter & Monitoring",
+    exc_maintenance: "Annual Maintenance",
+    exc_tag: "EXCLUDED", exc_excluded_total: "Excluded Items Total",
+    exc_optimizers: "Power Optimizers",
+    lbl_optimizers: "Power Optimizers?",
+    btn_recalc: "Recalculate with Custom Prices",
+    // Sources
+    src_title: "Price Sources & References",
+    src_panels_label: "Solar Panels (mono-facial):",
+    src_panels_note: "Based on average wholesale and retail pricing in Bulgaria and the EU for Tier 1 manufacturers (LONGi, JA Solar, Trina Solar, Canadian Solar). Prices reflect 2025\u20132026 market conditions for 410W\u2013550W modules.",
+    src_bifacial_label: "Bifacial Panels:",
+    src_bifacial_note: "Premium of ~25% over monofacial equivalents. Based on LONGi Hi-MO 5/6, Trina Vertex S+ bifacial module pricing in the European market.",
+    src_inverter_label: "Inverters:",
+    src_inverter_note: "String inverters (Sungrow, GoodWe): ~\u20ac120/kW. Hybrid inverters (Huawei, SMA, Fronius): ~\u20ac200/kW. Micro inverters (Enphase IQ7/IQ8): ~\u20ac300/kW. Prices from European solar distributors.",
+    src_battery_label: "Battery Storage + BMS:",
+    src_battery_note: "LiFePO4 batteries (BYD HVS/HVM, Pylontech US5000, Huawei LUNA2000). BMS cost included as a separate line item (\u20ac180 base + \u20ac12/kWh). Reflects 2025 European pricing.",
+    src_mounting_label: "Mounting Systems:",
+    src_mounting_note: "Roof rails & clamps: ~\u20ac32/panel (K2 Systems, Schletter). Ground-mount galvanized steel structures: ~\u20ac55/panel + \u20ac400 base for concrete footings. Stabilizer clamps: \u20ac8\u201312/panel.",
+    src_electrical_label: "Electrical Components:",
+    src_electrical_note: "Includes 6mm\u00b2 DC solar cable, MC4 connectors, AC wiring with breakers, DC combiner boxes, grounding kits and Type 1+2 surge protection. Based on Weidm\u00fcller, Phoenix Contact, and St\u00e4ubli component pricing.",
+    src_labor_label: "Installation Labor:",
+    src_labor_note: "Average Bulgarian market rates for certified solar installers. Ground-mount installations at the higher end due to structural work.",
+    src_permits_label: "Permits, Grid Connection & Design:",
+    src_permits_note: "Grid connection fees per EWRC schedule. Design engineering based on typical Bulgarian project management rates.",
+    src_irradiance_label: "Solar Irradiance Data:",
+    src_irradiance_note: "GHI values per oblast from the Global Solar Atlas (World Bank / Solargis) and PVGIS (EU JRC). Performance ratio of 0.82 applied.",
+    src_optimizers_label: "Power Optimizers:",
+    src_optimizers_note: "Per-panel DC optimizers (SolarEdge P-series, Tigo TS4-A-O). Improve yield by 5\u201325% under partial shading. Pricing from European solar distributors.",
+    src_co2_label: "CO\u2082 Emission Factor:",
+    src_co2_note: "Bulgarian grid emission factor based on European Environment Agency data. Reflects Bulgaria's energy mix."
+  },
+  bg: {
+    title: "Соларен Калкулатор",
+    subtitle: "Проектиране и оценка на соларни системи за домове в България",
+    sec_property: "Данни за имота",
+    lbl_proptype: "Тип имот", opt_single: "Еднофамилна къща", opt_multi: "Многофамилна сграда",
+    lbl_units: "Брой жилищни единици",
+    lbl_oblast: "Област", lbl_municipality: "Община",
+    lbl_roofarea: "Налична площ (m²)", lbl_consumption: "Месечна консумация на ел. енергия (kWh)",
+    sec_install: "Тип монтаж",
+    lbl_mounttype: "Монтаж на панелите", opt_roof: "На покрив", opt_ground: "На земя / двор (повдигната конструкция)",
+    lbl_orient: "Ориентация на покрива", opt_south: "Юг (оптимално)", opt_se: "Югоизток / Югозапад", opt_ew: "Изток / Запад", opt_flat: "Плосък покрив",
+    lbl_tilt: "Ъгъл на наклон (°)",
+    bifacial_info: "\u2600 Наземните системи позволяват двустранни (бифациални) панели, които улавят отразена светлина отдолу, давайки 5\u201315% повече енергия. Калкулаторът автоматично ще използва бифациални панели за тази конфигурация.",
+    sec_elecprice: "Цени на електроенергията",
+    note_tariff: "Въведете тарифните си цени. Ако имате единна тарифа, въведете еднаква стойност за ден и нощ.",
+    lbl_dayprice: "Дневна тарифа (EUR/kWh)", lbl_nightprice: "Нощна тарифа (EUR/kWh)", lbl_dayratio: "Дневна консумация (%)",
+    sec_system: "Конфигурация на системата",
+    lbl_panelw: "Мощност на панела (W)", lbl_inverter: "Тип инвертор",
+    opt_string: "Стрингов инвертор (Бюджетен)", opt_hybrid: "Хибриден инвертор (Препоръчителен)", opt_micro: "Микро инвертори (Премиум)",
+    lbl_battery: "Включване на батерии?", opt_yes: "Да", opt_no: "Не",
+    lbl_batcap: "Капацитет на батерията (kWh)",
+    lbl_mode: "Режим на енергия", opt_net: "Нетно отчитане", opt_self: "Само собствена консумация",
+    info_net: "<strong>Нетно отчитане:</strong> Излишната енергия се изнася в мрежата. Електромерът ви върви назад, компенсирайки бъдещата консумация по цена на дребно. Българското законодателство позволява нетно отчитане за системи до 30 kW за домакинства.",
+    info_self: "<strong>Само собствена консумация:</strong> Цялата произведена енергия се потребява на място или се съхранява в батерии. Излишната енергия не се продава.",
+    sec_financial: "Финансови параметри",
+    lbl_ann_increase: "Годишно увеличение на цената (%)", lbl_degradation: "Годишна деградация на панелите (%)",
+    lbl_lifetime: "Живот на системата (години)", lbl_maintenance: "Годишна поддръжка (EUR/год.)",
+    btn_calc: "Изчисли соларната система",
+    res_title: "Проект на системата и финансова прогноза",
+    res_monthly: "Прогнозно месечно производство (kWh)",
+    res_hardware: "Пълна спецификация на хардуер и монтаж",
+    opt_detailed: "Подробно", opt_simplified: "Опростено",
+    res_payback: "Прогноза за изплащане", res_summary: "Финансово обобщение за", res_years: "години",
+    disclaimer: "Оценките са базирани на средни данни за слънчева радиация в България, типични цени на хардуера (2025-2026) и потребителски тарифи. Реалните резултати може да варират. Консултирайте се със сертифициран инсталатор.",
+    ad_placeholder: "Рекламно пространство \u2013 Заменете с вашия Google AdSense код",
+    r_syssize: "Размер на системата", r_panels: "Соларни панели", r_annual: "kWh / годишно", r_invest: "Обща инвестиция",
+    r_savings1: "Спестявания / год. (1-ва)", r_payback: "Период на изплащане", r_roi: "Обща ROI", r_co2: "Спестени CO\u2082",
+    r_yr: "г.", r_na: "Н/Д",
+    th_component: "Компонент", th_qty: "К-во", th_unitprice: "Ед. цена", th_cost: "Цена (EUR)",
+    th_metric: "Показател", th_value: "Стойност",
+    hw_panels: "Соларни панели", hw_panels_bi: "Бифациални соларни панели",
+    hw_inverter: "Инвертор", hw_battery: "Батериен пакет", hw_bms: "Система за управление на батерии (BMS)",
+    hw_mounting_roof: "Монтажни релси и клеми за покрив", hw_mounting_ground: "Стоманена конструкция за наземен монтаж",
+    hw_stabilizers: "Модулни стабилизатори / клеми", hw_wiring_dc: "DC окабеляване и конектори (MC4)",
+    hw_wiring_ac: "AC окабеляване и прекъсвачи", hw_combiner: "DC комбиниращ модул",
+    hw_grounding: "Заземяване и гръмозащита", hw_meter: "Интелигентен електромер и мониторинг",
+    hw_conduit: "Кабелни канали и тръби",
+    hw_optimizers: "Оптимизатори на мощност (SolarEdge / Tigo)",
+    hw_sub_equipment: "Междинна сума – Оборудване", hw_sub_install: "Междинна сума – Монтаж",
+    hw_labor: "Монтаж – труд", hw_permits: "Разрешителни и свързване", hw_design: "Проектиране и инженеринг",
+    hw_total: "ОБЩА ИНВЕСТИЦИЯ",
+    s_equipment: "Оборудване", s_install: "Монтаж", s_other: "Разрешителни", s_perkw: "Цена на kW",
+    pb_pays: "Системата се изплаща за", pb_years: "години", pb_after: "След това спестявате приблизително",
+    pb_over: "за оставащите", pb_of: "години живот на системата.",
+    pb_note: "При текущите параметри системата не се изплаща в рамките на",
+    pb_consider: "Помислете за по-голяма система, нетно отчитане или намаляване на разходите.",
+    f_invest: "Обща инвестиция", f_maint: "Обща поддръжка", f_savings: "Общи спестявания",
+    f_net: "Нетна печалба / загуба", f_roi: "Възвръщаемост на инвестицията", f_payback: "Период на изплащане",
+    f_co2: "Избегнати CO\u2082 емисии", f_selfr: "Коефициент на самодостатъчност",
+    f_blended: "Смесена тарифа", f_tonnes: "тона",
+    // Exclusions
+    sec_exclude: "Изключване на разходи (направи си сам)",
+    note_exclude: "Отметнете елементите, които ще направите сами или не са ви необходими. Изключените разходи ще бъдат премахнати от общата инвестиция и изчислението за изплащане.",
+    exc_labor: "Монтаж \u2013 труд", exc_design: "Проектиране и инженеринг",
+    exc_permits: "Разрешителни и свързване", exc_mounting: "Монтажна конструкция",
+    exc_wiring: "Окабеляване и електрически компоненти", exc_meter: "Електромер и мониторинг",
+    exc_maintenance: "Годишна поддръжка",
+    exc_tag: "ИЗКЛЮЧЕНО", exc_excluded_total: "Общо изключени",
+    exc_optimizers: "Оптимизатори на мощност",
+    lbl_optimizers: "Оптимизатори на мощност?",
+    btn_recalc: "Преизчисли с нови цени",
+    // Sources
+    src_title: "Източници на цени и референции",
+    src_panels_label: "Соларни панели (монофациални):",
+    src_panels_note: "На базата на средни цени на едро и дребно в България и ЕС за производители от първи ред (LONGi, JA Solar, Trina Solar, Canadian Solar). Цените отразяват пазарните условия 2025\u20132026 за модули 410W\u2013550W.",
+    src_bifacial_label: "Бифациални панели:",
+    src_bifacial_note: "Надценка от ~25% спрямо монофациални еквиваленти. На базата на LONGi Hi-MO 5/6, Trina Vertex S+ бифациални модули на европейския пазар.",
+    src_inverter_label: "Инвертори:",
+    src_inverter_note: "Стрингови (Sungrow, GoodWe): ~\u20ac120/kW. Хибридни (Huawei, SMA, Fronius): ~\u20ac200/kW. Микро (Enphase IQ7/IQ8): ~\u20ac300/kW. Цени от европейски дистрибутори.",
+    src_battery_label: "Батерии + BMS:",
+    src_battery_note: "LiFePO4 батерии (BYD HVS/HVM, Pylontech US5000, Huawei LUNA2000). BMS разход включен отделно (\u20ac180 база + \u20ac12/kWh). Европейски цени за 2025.",
+    src_mounting_label: "Монтажни системи:",
+    src_mounting_note: "Покривни релси и клеми: ~\u20ac32/панел (K2 Systems, Schletter). Наземна стоманена конструкция: ~\u20ac55/панел + \u20ac400 за бетонни основи.",
+    src_electrical_label: "Електрически компоненти:",
+    src_electrical_note: "Включва DC соларен кабел 6mm\u00b2, MC4 конектори, AC окабеляване с прекъсвачи, DC комбиниращи кутии, заземяване и тип 1+2 гръмозащита.",
+    src_labor_label: "Монтаж \u2013 труд:",
+    src_labor_note: "Средни пазарни цени в България за сертифицирани соларни инсталатори. Наземният монтаж е по-скъп заради конструктивната работа.",
+    src_permits_label: "Разрешителни и проектиране:",
+    src_permits_note: "Такси за присъединяване към мрежата по тарифа на КЕВР. Проектиране на базата на типични български ставки.",
+    src_irradiance_label: "Данни за слънчево греене:",
+    src_irradiance_note: "GHI стойности по области от Global Solar Atlas (Световна банка / Solargis) и PVGIS (JRC на ЕС). Приложен коефициент на ефективност 0.82.",
+    src_optimizers_label: "Оптимизатори на мощност:",
+    src_optimizers_note: "DC оптимизатори за всеки панел (SolarEdge P-series, Tigo TS4-A-O). Подобряват добива с 5–25% при частична сянка. Цени от европейски дистрибутори.",
+    src_co2_label: "CO\u2082 емисионен фактор:",
+    src_co2_note: "Емисионен фактор на българската електрическа мрежа по данни на Европейската агенция по околна среда."
+  }
+};
+
+let LANG = 'en';
+
+function t(key) { return (T[LANG] && T[LANG][key]) || (T.en[key]) || key; }
+
+function setLang(lang) {
+    LANG = lang;
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent.trim() === lang.toUpperCase()));
+    document.getElementById('pageTitle').textContent = t('title') + ' – Bulgaria';
+    // Update all data-t elements
+    document.querySelectorAll('[data-t]').forEach(el => {
+        const key = el.getAttribute('data-t');
+        if (T[lang] && T[lang][key]) {
+            if (el.tagName === 'OPTION') el.textContent = T[lang][key];
+            else if (key.startsWith('info_')) el.innerHTML = T[lang][key];
+            else el.textContent = T[lang][key];
+        }
+    });
+    populateOblasts();
+    // Re-show mode info
+    const modeInfo = document.getElementById('modeInfo');
+    modeInfo.innerHTML = energyMode === 'net' ? t('info_net') : t('info_self');
+}
+
+function populateOblasts() {
+    const sel = document.getElementById('oblast');
+    const prev = sel.value;
+    sel.innerHTML = '';
+    const sorted = Object.keys(OBLASTS).sort((a,b) => {
+        const na = LANG === 'bg' ? OBLASTS_BG_MAP[a] : a;
+        const nb = LANG === 'bg' ? OBLASTS_BG_MAP[b] : b;
+        return na.localeCompare(nb, LANG === 'bg' ? 'bg' : 'en');
+    });
+    sorted.forEach(k => {
+        const o = document.createElement('option');
+        o.value = k;
+        const name = LANG === 'bg' ? OBLASTS_BG_MAP[k] : k;
+        o.textContent = `${name} (${OBLASTS[k].irr} kWh/m²)`;
+        sel.appendChild(o);
+    });
+    if (prev && OBLASTS[prev]) sel.value = prev;
+    else sel.value = 'Sofia City';
+    populateMunicipalities();
+}
+
+function populateMunicipalities() {
+    const oblast = document.getElementById('oblast').value;
+    const sel = document.getElementById('municipality');
+    sel.innerHTML = '';
+    if (!OBLASTS[oblast]) return;
+    OBLASTS[oblast].m.forEach(m => {
+        const o = document.createElement('option');
+        o.value = m;
+        o.textContent = LANG === 'bg' ? (MUNICIPALITIES_BG[m] || m) : m;
+        sel.appendChild(o);
+    });
+}
+
+// ══════════════════════════════════════════════════════════
+//  STATE & TOGGLES
+// ══════════════════════════════════════════════════════════
+let includeBattery = true;
+let energyMode = 'net';
+let mountType = 'roof';
+let includeOptimizers = false;
+
+function toggleBattery(btn) {
+    btn.parentElement.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    includeBattery = btn.dataset.value === 'yes';
+    document.getElementById('batteryCapGroup').style.display = includeBattery ? '' : 'none';
+}
+
+function toggleMode(btn) {
+    btn.parentElement.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    energyMode = btn.dataset.value;
+    document.getElementById('modeInfo').innerHTML = energyMode === 'net' ? t('info_net') : t('info_self');
+}
+
+function toggleMount(btn) {
+    btn.parentElement.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    mountType = btn.dataset.value;
+    const isGround = mountType === 'ground';
+    document.getElementById('bifacialNote').style.display = isGround ? '' : 'none';
+    document.getElementById('roofOrientGroup').style.display = isGround ? 'none' : '';
+    document.getElementById('roofTiltGroup').style.display = isGround ? 'none' : '';
+}
+
+function toggleOptimizers(btn) {
+    btn.parentElement.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    includeOptimizers = btn.dataset.value === 'yes';
+}
+
+function updateExcludeStyle(cb) {
+    cb.closest('.exclude-item').classList.toggle('excluded', cb.checked);
+}
+
+function getExclusions() {
+    return {
+        labor: document.getElementById('exc_labor').checked,
+        design: document.getElementById('exc_design').checked,
+        permits: document.getElementById('exc_permits').checked,
+        mounting: document.getElementById('exc_mounting').checked,
+        wiring: document.getElementById('exc_wiring').checked,
+        meter: document.getElementById('exc_meter').checked,
+        optimizers: document.getElementById('exc_optimizers').checked,
+        maintenance: document.getElementById('exc_maintenance').checked,
+    };
+}
+
+function isItemExcluded(key, excl) {
+    if (excl.labor && key === 'hw_labor') return true;
+    if (excl.design && key === 'hw_design') return true;
+    if (excl.permits && key === 'hw_permits') return true;
+    if (excl.mounting && (key === 'hw_mounting_roof' || key === 'hw_mounting_ground' || key === 'hw_stabilizers')) return true;
+    if (excl.wiring && (key === 'hw_wiring_dc' || key === 'hw_wiring_ac' || key === 'hw_combiner' || key === 'hw_grounding' || key === 'hw_conduit')) return true;
+    if (excl.meter && key === 'hw_meter') return true;
+    if (excl.optimizers && key === 'hw_optimizers') return true;
+    return false;
+}
+
+function toggleView(btn, view) {
+    btn.parentElement.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('detailedView').classList.toggle('hidden', view !== 'detailed');
+    document.getElementById('simpleView').classList.toggle('hidden', view !== 'simple');
+}
+
+function updateDefaults() {
+    const type = document.getElementById('propertyType').value;
+    const units = parseInt(document.getElementById('units').value) || 1;
+    if (type === 'single') {
+        document.getElementById('units').value = 1;
+        document.getElementById('consumption').value = 350;
+        document.getElementById('roofArea').value = 50;
+    } else {
+        document.getElementById('units').value = Math.max(units, 2);
+        const u = parseInt(document.getElementById('units').value);
+        document.getElementById('consumption').value = u * 280;
+        document.getElementById('roofArea').value = Math.min(u * 30 + 40, 5000);
+    }
+}
+
+// ══════════════════════════════════════════════════════════
+//  SOLAR CONSTANTS
+// ══════════════════════════════════════════════════════════
+const MONTHLY_FRACTION = [0.045,0.055,0.080,0.095,0.115,0.125,0.130,0.120,0.095,0.070,0.045,0.025];
+const MONTH_NAMES_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTH_NAMES_BG = ['Яну','Фев','Мар','Апр','Май','Юни','Юли','Авг','Сеп','Окт','Ное','Дек'];
+const ORIENT_FACTOR = { south: 1.0, southeast: 0.95, east: 0.85, flat: 0.90 };
+
+function tiltFactor(angle) {
+    const diff = Math.abs(angle - 33);
+    return Math.max(0.7, 1 - diff * 0.004);
+}
+
+function panelArea(wattage) { return 1.7 + (wattage - 400) * 0.003; }
+
+function fmt(n, d=0) { return n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
+
+// ══════════════════════════════════════════════════════════
+//  HARDWARE COST MODEL
+// ══════════════════════════════════════════════════════════
+// Each item now returns: unitPrice (editable), qty, and a calc function for cost
+// unitLabel describes what the unit price represents (per panel, per kW, per kWh, etc.)
+
+function getHardwareCosts(systemKw, panelW, numPanels, inverterType, withBattery, batteryKwh, isGround, isBifacial, withOptimizers) {
+    // Panel pricing per watt
+    let panelPricePerW;
+    if (isBifacial) {
+        panelPricePerW = panelW <= 410 ? 0.28 : panelW <= 450 ? 0.31 : panelW <= 500 ? 0.36 : 0.40;
+    } else {
+        panelPricePerW = panelW <= 410 ? 0.22 : panelW <= 450 ? 0.25 : panelW <= 500 ? 0.30 : 0.34;
+    }
+    // Convert to per-panel price for editability
+    const panelUnitPrice = Math.round(panelPricePerW * panelW * 100) / 100;
+
+    // Inverter per kW
+    const invRates = { string: 120, hybrid: 200, micro: 300 };
+    const invUnitPrice = invRates[inverterType];
+    const invQty = inverterType === 'micro' ? numPanels : Math.ceil(systemKw / 10);
+
+    // Battery per kWh + BMS
+    const batteryUnitPrice = 420;
+    const bmsUnitPrice = Math.round((180 + batteryKwh * 12) * 100 / 100); // flat for this config
+
+    // Power optimizers per panel (SolarEdge P-series style)
+    const optimizerUnitPrice = 45; // ~€45 per optimizer
+
+    // Mounting per panel
+    const mountUnitPrice = isGround ? 55 : 32;
+    const mountBasePrice = isGround ? 400 : 0; // extra base for ground
+
+    // Stabilizers per panel
+    const stabUnitPrice = isGround ? 12 : 8;
+
+    // Wiring — use per-kW pricing for simplicity
+    const dcWireUnit = Math.round((systemKw * 28 + numPanels * 4 + 80) / systemKw * 100) / 100;
+    const acWireUnit = Math.round((systemKw * 22 + 120) / systemKw * 100) / 100;
+    const combinerUnit = 85; // per box
+    const combinerQty = Math.ceil(numPanels / 12);
+    const groundingUnit = Math.round((150 + systemKw * 8) * 100) / 100;
+    const conduitUnit = Math.round((systemKw * 15 + 60) / systemKw * 100) / 100;
+
+    const meterUnit = 220;
+
+    // Installation
+    const laborUnit = Math.round((systemKw * (isGround ? 250 : 200) + 400) / systemKw * 100) / 100;
+    const permitsUnit = Math.round((180 + systemKw * 15) * 100) / 100;
+    const designUnit = Math.round((200 + systemKw * 20) * 100) / 100;
+
+    const items = [
+        // Equipment — each has: key, qty, unitPrice, unitLabel, group
+        { key: isBifacial ? 'hw_panels_bi' : 'hw_panels', qty: numPanels, unitPrice: panelUnitPrice, unitLabel: '/panel', group: 'equip' },
+        { key: 'hw_inverter', qty: invQty, unitPrice: inverterType === 'micro' ? Math.round(invUnitPrice * systemKw / numPanels * 100)/100 : invUnitPrice, unitLabel: inverterType === 'micro' ? '/unit' : '/kW (\u00d7' + fmt(systemKw,1) + ')', group: 'equip', qtyIsFixed: inverterType !== 'micro', calcCost: inverterType !== 'micro' ? (up) => up * systemKw : null },
+    ];
+
+    if (withOptimizers) {
+        items.push({ key: 'hw_optimizers', qty: numPanels, unitPrice: optimizerUnitPrice, unitLabel: '/panel', group: 'equip' });
+    }
+
+    if (withBattery) {
+        items.push({ key: 'hw_battery', qty: 1, unitPrice: Math.round(batteryUnitPrice * batteryKwh * 100)/100, unitLabel: `/pack (${batteryKwh} kWh)`, group: 'equip', qtyIsFixed: true });
+        items.push({ key: 'hw_bms', qty: 1, unitPrice: bmsUnitPrice, unitLabel: '/unit', group: 'equip' });
+    }
+
+    items.push(
+        { key: isGround ? 'hw_mounting_ground' : 'hw_mounting_roof', qty: numPanels, unitPrice: mountUnitPrice, unitLabel: '/panel', group: 'equip', basePrice: mountBasePrice },
+        { key: 'hw_stabilizers', qty: numPanels, unitPrice: stabUnitPrice, unitLabel: '/panel', group: 'equip' },
+        { key: 'hw_wiring_dc', qty: 1, unitPrice: Math.round(dcWireUnit * systemKw * 100)/100, unitLabel: '/set', group: 'equip', qtyIsFixed: true },
+        { key: 'hw_wiring_ac', qty: 1, unitPrice: Math.round(acWireUnit * systemKw * 100)/100, unitLabel: '/set', group: 'equip', qtyIsFixed: true },
+        { key: 'hw_combiner', qty: combinerQty, unitPrice: combinerUnit, unitLabel: '/box', group: 'equip' },
+        { key: 'hw_grounding', qty: 1, unitPrice: groundingUnit, unitLabel: '/set', group: 'equip', qtyIsFixed: true },
+        { key: 'hw_meter', qty: 1, unitPrice: meterUnit, unitLabel: '/unit', group: 'equip', qtyIsFixed: true },
+        { key: 'hw_conduit', qty: 1, unitPrice: Math.round(conduitUnit * systemKw * 100)/100, unitLabel: '/set', group: 'equip', qtyIsFixed: true },
+        // Installation
+        { key: 'hw_labor', qty: 1, unitPrice: Math.round(laborUnit * systemKw * 100)/100, unitLabel: '/total', group: 'install', qtyIsFixed: true },
+        { key: 'hw_permits', qty: 1, unitPrice: permitsUnit, unitLabel: '/total', group: 'install', qtyIsFixed: true },
+        { key: 'hw_design', qty: 1, unitPrice: designUnit, unitLabel: '/total', group: 'install', qtyIsFixed: true },
+    );
+
+    // Calculate cost for each item
+    items.forEach(item => {
+        if (item.calcCost) {
+            item.cost = item.calcCost(item.unitPrice);
+        } else if (item.qtyIsFixed) {
+            item.cost = item.unitPrice;
+        } else {
+            item.cost = item.qty * item.unitPrice + (item.basePrice || 0);
+        }
+    });
+
+    return items;
+}
+
+// Store last calculation state so we can recalculate with edited prices
+let lastCalcState = null;
+
+// ══════════════════════════════════════════════════════════
+//  CALCULATE
+// ══════════════════════════════════════════════════════════
+function calculate() {
+    const oblast = document.getElementById('oblast').value;
+    const roofArea = parseFloat(document.getElementById('roofArea').value);
+    const monthlyConsumption = parseFloat(document.getElementById('consumption').value);
+    const dayPrice = parseFloat(document.getElementById('dayPrice').value);
+    const nightPrice = parseFloat(document.getElementById('nightPrice').value);
+    const dayRatio = parseFloat(document.getElementById('dayRatio').value) / 100;
+    const panelW = parseInt(document.getElementById('panelWattage').value);
+    const inverterType = document.getElementById('inverterType').value;
+    const orientation = document.getElementById('roofOrientation').value;
+    const tiltAngle = parseFloat(document.getElementById('roofTilt').value);
+    const batteryKwh = includeBattery ? parseFloat(document.getElementById('batteryCap').value) : 0;
+    const annualIncrease = parseFloat(document.getElementById('annualIncrease').value) / 100;
+    const degradation = parseFloat(document.getElementById('degradation').value) / 100;
+    const systemLife = parseInt(document.getElementById('systemLife').value);
+    const maintenanceCost = parseFloat(document.getElementById('maintenanceCost').value);
+
+    const isGround = mountType === 'ground';
+    const isBifacial = isGround;
+    const bifacialGain = isBifacial ? 0.10 : 0; // 10% avg gain for bifacial
+
+    const irradiance = OBLASTS[oblast].irr;
+
+    let orientFactor, tiltF;
+    if (isGround) {
+        orientFactor = 1.0; // ground mounts face south by default, optimal tilt
+        tiltF = 1.0;
+    } else {
+        orientFactor = ORIENT_FACTOR[orientation];
+        tiltF = tiltFactor(tiltAngle);
+    }
+
+    // System sizing
+    const pArea = panelArea(panelW);
+    const spacingFactor = isGround ? 1.3 : 1.15; // ground needs more spacing for bifacial
+    const numPanels = Math.max(1, Math.floor(roofArea / (pArea * spacingFactor)));
+    const systemKw = (numPanels * panelW) / 1000;
+
+    // Annual production
+    const performanceRatio = 0.82;
+    const baseProduction = systemKw * (irradiance / 1000) * performanceRatio * orientFactor * tiltF;
+    const annualProduction = baseProduction * (1 + bifacialGain);
+
+    // Monthly production
+    const monthlyProduction = MONTHLY_FRACTION.map(f => annualProduction * f);
+    const annualConsumption = monthlyConsumption * 12;
+
+    // Blended electricity price
+    const blendedPrice = dayPrice * dayRatio + nightPrice * (1 - dayRatio);
+
+    // Self-consumption ratio
+    let selfConsumptionRatio;
+    if (energyMode === 'self') {
+        const baseRatio = Math.min(0.75, annualConsumption / annualProduction);
+        const batteryBoost = includeBattery ? Math.min(0.2, batteryKwh * 0.015) : 0;
+        selfConsumptionRatio = Math.min(0.95, baseRatio + batteryBoost);
+    } else {
+        selfConsumptionRatio = 1.0;
+    }
+
+    // Hardware costs with exclusions
+    const excl = getExclusions();
+    const hwItems = getHardwareCosts(systemKw, panelW, numPanels, inverterType, includeBattery, batteryKwh, isGround, isBifacial, includeOptimizers);
+    // Mark excluded items
+    hwItems.forEach(item => { item.excluded = isItemExcluded(item.key, excl); });
+    const equipCost = hwItems.filter(i => i.group === 'equip' && !i.excluded).reduce((s,i) => s + i.cost, 0);
+    const installCost = hwItems.filter(i => i.group === 'install' && !i.excluded).reduce((s,i) => s + i.cost, 0);
+    const totalCost = equipCost + installCost;
+    const excludedTotal = hwItems.filter(i => i.excluded).reduce((s,i) => s + i.cost, 0);
+
+    // Annual savings with day/night split
+    // Solar production mostly covers daytime
+    const solarDayFraction = 0.85; // ~85% of solar production is during day hours
+    const usableDayProduction = Math.min(annualProduction * solarDayFraction * selfConsumptionRatio, annualConsumption * dayRatio);
+    const usableNightProduction = Math.min(annualProduction * (1 - solarDayFraction) * selfConsumptionRatio, annualConsumption * (1 - dayRatio));
+    // If battery, some day production shifts to night savings
+    const batteryShift = includeBattery ? Math.min(batteryKwh * 365 * 0.6, annualProduction * 0.15) * selfConsumptionRatio : 0;
+    const nightFromBattery = Math.min(batteryShift, annualConsumption * (1 - dayRatio) - usableNightProduction);
+
+    const daySavings = usableDayProduction * dayPrice;
+    const nightSavings = (usableNightProduction + Math.max(0, nightFromBattery)) * nightPrice;
+
+    let exportRevenue = 0;
+    if (energyMode === 'net' && annualProduction > annualConsumption) {
+        exportRevenue = (annualProduction - annualConsumption) * blendedPrice * 0.85;
+    }
+
+    const totalSavingsYear1 = daySavings + nightSavings + exportRevenue;
+
+    // Payback projection
+    let cumulativeSavings = 0;
+    let paybackYear = null;
+    const projectionData = [];
+
+    const effectiveMaintenance = excl.maintenance ? 0 : maintenanceCost;
+    for (let y = 1; y <= systemLife; y++) {
+        const prodFactor = Math.pow(1 - degradation, y - 1);
+        const priceFactor = Math.pow(1 + annualIncrease, y - 1);
+        const yearSavings = totalSavingsYear1 * prodFactor * priceFactor - effectiveMaintenance;
+        cumulativeSavings += yearSavings;
+        const net = cumulativeSavings - totalCost;
+        projectionData.push({ year: y, net, savings: yearSavings });
+        if (net >= 0 && paybackYear === null) paybackYear = y;
+    }
+
+    const totalLifetimeSavings = cumulativeSavings;
+    const totalROI = ((totalLifetimeSavings - totalCost) / totalCost) * 100;
+    const co2Saved = annualProduction * 0.45 * systemLife / 1000;
+
+    // ── RENDER ──
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('summaryYears').textContent = systemLife;
+    const months = LANG === 'bg' ? MONTH_NAMES_BG : MONTH_NAMES_EN;
+
+    // Key stats
+    const panelLabel = isBifacial ? `${t('r_panels')} (bifacial)` : t('r_panels');
+    document.getElementById('statsGrid').innerHTML = `
+        <div class="stat-card highlight"><div class="value">${fmt(systemKw,1)} kW</div><div class="label">${t('r_syssize')}</div></div>
+        <div class="stat-card"><div class="value">${numPanels}</div><div class="label">${panelLabel}</div></div>
+        <div class="stat-card"><div class="value">${fmt(annualProduction)}</div><div class="label">${t('r_annual')}</div></div>
+        <div class="stat-card highlight"><div class="value">&euro;${fmt(totalCost)}</div><div class="label">${t('r_invest')}</div></div>
+        <div class="stat-card success"><div class="value">&euro;${fmt(totalSavingsYear1)}</div><div class="label">${t('r_savings1')}</div></div>
+        <div class="stat-card ${paybackYear ? 'success' : ''}"><div class="value">${paybackYear ? paybackYear + ' ' + t('r_yr') : '> ' + systemLife + ' ' + t('r_yr')}</div><div class="label">${t('r_payback')}</div></div>
+        <div class="stat-card"><div class="value">${fmt(totalROI,0)}%</div><div class="label">${t('r_roi')}</div></div>
+        <div class="stat-card"><div class="value">${fmt(co2Saved,1)}t</div><div class="label">${t('r_co2')}</div></div>
+    `;
+
+    // Monthly chart
+    const maxMonth = Math.max(...monthlyProduction);
+    document.getElementById('monthlyChart').innerHTML = monthlyProduction.map((val, i) => `
+        <div class="month-col">
+            <div class="month-value">${fmt(val)}</div>
+            <div class="month-bar" style="height: ${(val / maxMonth) * 130}px"></div>
+            <div class="month-label">${months[i]}</div>
+        </div>
+    `).join('');
+
+    // Save state for price recalculation
+    lastCalcState = {
+        hwItems, excl, systemKw, systemLife, annualProduction, annualConsumption,
+        totalSavingsYear1, degradation: parseFloat(document.getElementById('degradation').value)/100,
+        annualIncrease: parseFloat(document.getElementById('annualIncrease').value)/100,
+        maintenanceCost, isBifacial
+    };
+
+    // Hardware table – detailed with editable unit prices
+    renderHwTable(hwItems, excl, equipCost, installCost, totalCost, excludedTotal);
+
+    // Store original unit prices for reset
+    lastCalcState.originalPrices = hwItems.map(i => i.unitPrice);
+
+    // Hardware – simplified
+    document.getElementById('simpleCosts').innerHTML = `
+        <div class="stat-card"><div class="value">&euro;${fmt(equipCost)}</div><div class="label">${t('s_equipment')}</div></div>
+        <div class="stat-card"><div class="value">&euro;${fmt(installCost)}</div><div class="label">${t('s_install')}</div></div>
+        <div class="stat-card"><div class="value">&euro;${fmt(hwItems.filter(i=>i.key==='hw_permits'||i.key==='hw_design').reduce((s,i)=>s+i.cost,0))}</div><div class="label">${t('s_other')}</div></div>
+        <div class="stat-card highlight"><div class="value">&euro;${fmt(totalCost / systemKw)}/kW</div><div class="label">${t('s_perkw')}</div></div>
+    `;
+
+    // Payback chart
+    const maxAbs = Math.max(...projectionData.map(d => Math.abs(d.net)));
+    document.getElementById('paybackChart').innerHTML = projectionData.map(d => {
+        const h = Math.max(8, (Math.abs(d.net) / maxAbs) * 180);
+        const cls = d.net < 0 ? 'negative' : (d.year === paybackYear ? 'breakeven' : 'positive');
+        return `<div class="bar-col"><div class="bar ${cls}" style="height: ${h}px" title="Year ${d.year}: €${fmt(d.net)}"></div><div class="bar-label">${d.year}</div></div>`;
+    }).join('');
+
+    const pbInfo = document.getElementById('paybackInfo');
+    if (paybackYear) {
+        pbInfo.innerHTML = `${t('pb_pays')} <strong>${paybackYear} ${t('pb_years')}</strong>. ${t('pb_after')} <strong>&euro;${fmt(totalLifetimeSavings - totalCost)}</strong> ${t('pb_over')} ${systemLife - paybackYear} ${t('pb_of')}`;
+    } else {
+        pbInfo.innerHTML = `<strong>${t('pb_note')}</strong> ${systemLife} ${t('pb_years')}. ${t('pb_consider')}`;
+    }
+
+    // Financial summary
+    document.getElementById('finTable').innerHTML = `
+        <tr><th>${t('th_metric')}</th><th style="text-align:right">${t('th_value')}</th></tr>
+        <tr><td>${t('f_invest')}</td><td style="text-align:right">&euro;${fmt(totalCost)}</td></tr>
+        <tr><td>${t('f_maint')} (${systemLife} ${t('res_years').toLowerCase()})${excl.maintenance ? ' <span style="color:var(--danger);font-size:0.75rem">'+t('exc_tag')+'</span>' : ''}</td><td style="text-align:right">&euro;${fmt(effectiveMaintenance * systemLife)}</td></tr>
+        <tr><td>${t('f_savings')} (${systemLife} ${t('res_years').toLowerCase()})</td><td style="text-align:right">&euro;${fmt(totalLifetimeSavings)}</td></tr>
+        <tr><td>${t('f_net')}</td><td style="text-align:right;color:${totalLifetimeSavings - totalCost >= 0 ? 'var(--success)' : 'var(--danger)'}">&euro;${fmt(totalLifetimeSavings - totalCost)}</td></tr>
+        <tr><td>${t('f_roi')}</td><td style="text-align:right">${fmt(totalROI,1)}%</td></tr>
+        <tr><td>${t('f_payback')}</td><td style="text-align:right">${paybackYear ? paybackYear + ' ' + t('pb_years') : t('r_na') + ' (>' + systemLife + ')'}</td></tr>
+        <tr><td>${t('f_blended')}</td><td style="text-align:right">&euro;${fmt(blendedPrice,3)}/kWh</td></tr>
+        <tr><td>${t('f_co2')}</td><td style="text-align:right">${fmt(co2Saved,1)} ${t('f_tonnes')}</td></tr>
+        <tr><td>${t('f_selfr')}</td><td style="text-align:right">${fmt(Math.min(100, (annualProduction / annualConsumption) * 100),0)}%</td></tr>
+    `;
+
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ══════════════════════════════════════════════════════════
+//  EDITABLE HARDWARE TABLE
+// ══════════════════════════════════════════════════════════
+function renderHwTable(hwItems, excl, equipCost, installCost, totalCost, excludedTotal) {
+    let hwRows = `<tr><th>${t('th_component')}</th><th>${t('th_qty')}</th><th class="th-unitprice">${t('th_unitprice')}</th><th style="text-align:right">${t('th_cost')}</th></tr>`;
+    let lastGroup = '';
+    hwItems.forEach((item, idx) => {
+        if (item.group !== lastGroup && lastGroup === 'equip') {
+            hwRows += `<tr class="subtotal"><td colspan="3">${t('hw_sub_equipment')}</td><td style="text-align:right">&euro;${fmt(equipCost)}</td></tr>`;
+        }
+        lastGroup = item.group;
+        const label = t(item.key);
+        const qtyStr = item.qty > 1 ? item.qty : '\u2014';
+        const exStyle = item.excluded ? ' style="text-decoration:line-through;opacity:0.45"' : '';
+        const exTag = item.excluded ? ` <span style="color:var(--danger);font-size:0.7rem;font-weight:600">${t('exc_tag')}</span>` : '';
+        const unitPriceVal = item.unitPrice.toFixed(2);
+        const unitLabel = item.unitLabel || '';
+        hwRows += `<tr${exStyle}>
+            <td>${label}${exTag}</td>
+            <td style="text-align:center">${qtyStr}</td>
+            <td class="unit-price-cell" style="text-align:right">
+                &euro;<input type="number" class="unit-price-input" data-idx="${idx}" value="${unitPriceVal}" step="0.01" min="0" onchange="onUnitPriceChange(this)">
+                <span style="font-size:0.7rem;color:var(--text-muted)">${unitLabel}</span>
+            </td>
+            <td style="text-align:right">&euro;${fmt(item.cost)}</td>
+        </tr>`;
+    });
+    hwRows += `<tr class="subtotal"><td colspan="3">${t('hw_sub_install')}</td><td style="text-align:right">&euro;${fmt(installCost)}</td></tr>`;
+    if (excludedTotal > 0) {
+        hwRows += `<tr style="opacity:0.5"><td colspan="3">${t('exc_excluded_total')}</td><td style="text-align:right;text-decoration:line-through">&euro;${fmt(excludedTotal)}</td></tr>`;
+    }
+    hwRows += `<tr class="total"><td colspan="3">${t('hw_total')}</td><td style="text-align:right">&euro;${fmt(totalCost)}</td></tr>`;
+    document.getElementById('hwTable').innerHTML = hwRows;
+}
+
+function onUnitPriceChange(input) {
+    // Show the recalc button when any price is edited
+    document.getElementById('recalcBtn').classList.remove('hidden');
+}
+
+function recalcFromPrices() {
+    if (!lastCalcState) return;
+    const st = lastCalcState;
+    const inputs = document.querySelectorAll('#hwTable .unit-price-input');
+
+    // Update unit prices from inputs
+    inputs.forEach(inp => {
+        const idx = parseInt(inp.dataset.idx);
+        const newPrice = parseFloat(inp.value);
+        if (!isNaN(newPrice) && newPrice >= 0) {
+            st.hwItems[idx].unitPrice = newPrice;
+        }
+    });
+
+    // Recalculate costs
+    st.hwItems.forEach(item => {
+        if (item.calcCost) {
+            item.cost = item.calcCost(item.unitPrice);
+        } else if (item.qtyIsFixed) {
+            item.cost = item.unitPrice;
+        } else {
+            item.cost = item.qty * item.unitPrice + (item.basePrice || 0);
+        }
+        item.excluded = isItemExcluded(item.key, st.excl);
+    });
+
+    const equipCost = st.hwItems.filter(i => i.group === 'equip' && !i.excluded).reduce((s,i) => s + i.cost, 0);
+    const installCost = st.hwItems.filter(i => i.group === 'install' && !i.excluded).reduce((s,i) => s + i.cost, 0);
+    const totalCost = equipCost + installCost;
+    const excludedTotal = st.hwItems.filter(i => i.excluded).reduce((s,i) => s + i.cost, 0);
+
+    // Re-render hardware table
+    renderHwTable(st.hwItems, st.excl, equipCost, installCost, totalCost, excludedTotal);
+
+    // Recalculate payback with new total cost
+    let cumulativeSavings = 0;
+    let paybackYear = null;
+    const projectionData = [];
+    const effectiveMaintenance = st.excl.maintenance ? 0 : st.maintenanceCost;
+
+    for (let y = 1; y <= st.systemLife; y++) {
+        const prodFactor = Math.pow(1 - st.degradation, y - 1);
+        const priceFactor = Math.pow(1 + st.annualIncrease, y - 1);
+        const yearSavings = st.totalSavingsYear1 * prodFactor * priceFactor - effectiveMaintenance;
+        cumulativeSavings += yearSavings;
+        const net = cumulativeSavings - totalCost;
+        projectionData.push({ year: y, net, savings: yearSavings });
+        if (net >= 0 && paybackYear === null) paybackYear = y;
+    }
+
+    const totalLifetimeSavings = cumulativeSavings;
+    const totalROI = ((totalLifetimeSavings - totalCost) / totalCost) * 100;
+    const co2Saved = st.annualProduction * 0.45 * st.systemLife / 1000;
+
+    // Update stats
+    const panelLabel = st.isBifacial ? `${t('r_panels')} (bifacial)` : t('r_panels');
+    const numPanels = st.hwItems.find(i => i.key.startsWith('hw_panels'))?.qty || 0;
+    const systemKw = st.systemKw;
+    document.getElementById('statsGrid').innerHTML = `
+        <div class="stat-card highlight"><div class="value">${fmt(systemKw,1)} kW</div><div class="label">${t('r_syssize')}</div></div>
+        <div class="stat-card"><div class="value">${numPanels}</div><div class="label">${panelLabel}</div></div>
+        <div class="stat-card"><div class="value">${fmt(st.annualProduction)}</div><div class="label">${t('r_annual')}</div></div>
+        <div class="stat-card highlight"><div class="value">&euro;${fmt(totalCost)}</div><div class="label">${t('r_invest')}</div></div>
+        <div class="stat-card success"><div class="value">&euro;${fmt(st.totalSavingsYear1)}</div><div class="label">${t('r_savings1')}</div></div>
+        <div class="stat-card ${paybackYear ? 'success' : ''}"><div class="value">${paybackYear ? paybackYear + ' ' + t('r_yr') : '> ' + st.systemLife + ' ' + t('r_yr')}</div><div class="label">${t('r_payback')}</div></div>
+        <div class="stat-card"><div class="value">${fmt(totalROI,0)}%</div><div class="label">${t('r_roi')}</div></div>
+        <div class="stat-card"><div class="value">${fmt(co2Saved,1)}t</div><div class="label">${t('r_co2')}</div></div>
+    `;
+
+    // Update payback chart
+    const maxAbs = Math.max(...projectionData.map(d => Math.abs(d.net)));
+    document.getElementById('paybackChart').innerHTML = projectionData.map(d => {
+        const h = Math.max(8, (Math.abs(d.net) / maxAbs) * 180);
+        const cls = d.net < 0 ? 'negative' : (d.year === paybackYear ? 'breakeven' : 'positive');
+        return `<div class="bar-col"><div class="bar ${cls}" style="height: ${h}px" title="Year ${d.year}: \u20ac${fmt(d.net)}"></div><div class="bar-label">${d.year}</div></div>`;
+    }).join('');
+
+    const pbInfo = document.getElementById('paybackInfo');
+    if (paybackYear) {
+        pbInfo.innerHTML = `${t('pb_pays')} <strong>${paybackYear} ${t('pb_years')}</strong>. ${t('pb_after')} <strong>&euro;${fmt(totalLifetimeSavings - totalCost)}</strong> ${t('pb_over')} ${st.systemLife - paybackYear} ${t('pb_of')}`;
+    } else {
+        pbInfo.innerHTML = `<strong>${t('pb_note')}</strong> ${st.systemLife} ${t('pb_years')}. ${t('pb_consider')}`;
+    }
+
+    // Update simplified view
+    document.getElementById('simpleCosts').innerHTML = `
+        <div class="stat-card"><div class="value">&euro;${fmt(equipCost)}</div><div class="label">${t('s_equipment')}</div></div>
+        <div class="stat-card"><div class="value">&euro;${fmt(installCost)}</div><div class="label">${t('s_install')}</div></div>
+        <div class="stat-card"><div class="value">&euro;${fmt(st.hwItems.filter(i=>i.key==='hw_permits'||i.key==='hw_design').filter(i=>!i.excluded).reduce((s,i)=>s+i.cost,0))}</div><div class="label">${t('s_other')}</div></div>
+        <div class="stat-card highlight"><div class="value">&euro;${fmt(totalCost / systemKw)}/kW</div><div class="label">${t('s_perkw')}</div></div>
+    `;
+
+    // Update financial summary
+    const blendedPrice = parseFloat(document.getElementById('dayPrice').value) * parseFloat(document.getElementById('dayRatio').value)/100 + parseFloat(document.getElementById('nightPrice').value) * (1 - parseFloat(document.getElementById('dayRatio').value)/100);
+    document.getElementById('finTable').innerHTML = `
+        <tr><th>${t('th_metric')}</th><th style="text-align:right">${t('th_value')}</th></tr>
+        <tr><td>${t('f_invest')}</td><td style="text-align:right">&euro;${fmt(totalCost)}</td></tr>
+        <tr><td>${t('f_maint')} (${st.systemLife} ${t('res_years').toLowerCase()})${st.excl.maintenance ? ' <span style="color:var(--danger);font-size:0.75rem">'+t('exc_tag')+'</span>' : ''}</td><td style="text-align:right">&euro;${fmt(effectiveMaintenance * st.systemLife)}</td></tr>
+        <tr><td>${t('f_savings')} (${st.systemLife} ${t('res_years').toLowerCase()})</td><td style="text-align:right">&euro;${fmt(totalLifetimeSavings)}</td></tr>
+        <tr><td>${t('f_net')}</td><td style="text-align:right;color:${totalLifetimeSavings - totalCost >= 0 ? 'var(--success)' : 'var(--danger)'}">&euro;${fmt(totalLifetimeSavings - totalCost)}</td></tr>
+        <tr><td>${t('f_roi')}</td><td style="text-align:right">${fmt(totalROI,1)}%</td></tr>
+        <tr><td>${t('f_payback')}</td><td style="text-align:right">${paybackYear ? paybackYear + ' ' + t('pb_years') : t('r_na') + ' (>' + st.systemLife + ')'}</td></tr>
+        <tr><td>${t('f_blended')}</td><td style="text-align:right">&euro;${fmt(blendedPrice,3)}/kWh</td></tr>
+        <tr><td>${t('f_co2')}</td><td style="text-align:right">${fmt(co2Saved,1)} ${t('f_tonnes')}</td></tr>
+        <tr><td>${t('f_selfr')}</td><td style="text-align:right">${fmt(Math.min(100, (st.annualProduction / st.annualConsumption) * 100),0)}%</td></tr>
+    `;
+
+    // Hide the recalc button after recalculation
+    document.getElementById('recalcBtn').classList.add('hidden');
+}
+
+// ── INIT ──
+populateOblasts();
+</script>
+</body>
+</html>
