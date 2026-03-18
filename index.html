@@ -744,7 +744,10 @@ const T = {
     src_optimizers_label: "Power Optimizers:",
     src_optimizers_note: "Per-panel DC optimizers (SolarEdge P-series, Tigo TS4-A-O). Improve yield by 5\u201325% under partial shading. Pricing from European solar distributors.",
     src_co2_label: "CO\u2082 Emission Factor:",
-    src_co2_note: "Bulgarian grid emission factor based on European Environment Agency data. Reflects Bulgaria's energy mix."
+    src_co2_note: "Bulgarian grid emission factor based on European Environment Agency data. Reflects Bulgaria's energy mix.",
+    // Unit labels
+    ul_panel: "/panel", ul_unit: "/unit", ul_pack: "/pack", ul_pc: "/pc",
+    ul_set: "/set", ul_box: "/box", ul_total: "/total"
   },
   bg: {
     title: "Соларен Калкулатор",
@@ -841,7 +844,10 @@ const T = {
     src_optimizers_label: "Оптимизатори на мощност:",
     src_optimizers_note: "DC оптимизатори за всеки панел (SolarEdge P-series, Tigo TS4-A-O). Подобряват добива с 5–25% при частична сянка. Цени от европейски дистрибутори.",
     src_co2_label: "CO\u2082 емисионен фактор:",
-    src_co2_note: "Емисионен фактор на българската електрическа мрежа по данни на Европейската агенция по околна среда."
+    src_co2_note: "Емисионен фактор на българската електрическа мрежа по данни на Европейската агенция по околна среда.",
+    // Unit labels
+    ul_panel: "/панел", ul_unit: "/бр.", ul_pack: "/пакет", ul_pc: "/бр.",
+    ul_set: "/комплект", ul_box: "/кутия", ul_total: "/общо"
   }
 };
 
@@ -1043,34 +1049,34 @@ function getHardwareCosts(systemKw, panelW, numPanels, inverterType, withBattery
 
     const items = [
         // ── Equipment ──
-        { key: isBifacial ? 'hw_panels_bi' : 'hw_panels', qty: numPanels, unitPrice: r2(panelPricePerW * panelW), unitLabel: '/panel', group: 'equip' },
-        { key: 'hw_inverter', qty: invQty, unitPrice: invUnit, unitLabel: '/unit', group: 'equip' },
+        { key: isBifacial ? 'hw_panels_bi' : 'hw_panels', qty: numPanels, unitPrice: r2(panelPricePerW * panelW), ulKey: 'ul_panel', group: 'equip' },
+        { key: 'hw_inverter', qty: invQty, unitPrice: invUnit, ulKey: 'ul_unit', group: 'equip' },
     ];
 
     if (withOptimizers) {
-        items.push({ key: 'hw_optimizers', qty: numPanels, unitPrice: 45, unitLabel: '/panel', group: 'equip' });
+        items.push({ key: 'hw_optimizers', qty: numPanels, unitPrice: 45, ulKey: 'ul_panel', group: 'equip' });
     }
 
     if (withBattery) {
         items.push(
-            { key: 'hw_battery', qty: 1, unitPrice: batteryUnitPrice, unitLabel: '/pack', group: 'equip' },
-            { key: 'hw_bms', qty: 1, unitPrice: bmsUnitPrice, unitLabel: '/unit', group: 'equip' },
+            { key: 'hw_battery', qty: 1, unitPrice: batteryUnitPrice, ulKey: 'ul_pack', group: 'equip' },
+            { key: 'hw_bms', qty: 1, unitPrice: bmsUnitPrice, ulKey: 'ul_unit', group: 'equip' },
         );
     }
 
     items.push(
-        { key: isGround ? 'hw_mounting_ground' : 'hw_mounting_roof', qty: numPanels, unitPrice: isGround ? 55 : 32, unitLabel: '/panel', group: 'equip' },
-        { key: 'hw_stabilizers', qty: numPanels, unitPrice: isGround ? 12 : 8, unitLabel: '/pc', group: 'equip' },
-        { key: 'hw_wiring_dc', qty: numPanels, unitPrice: r2((systemKw * 28 + numPanels * 4 + 80) / numPanels), unitLabel: '/panel', group: 'equip' },
-        { key: 'hw_wiring_ac', qty: 1, unitPrice: r2(systemKw * 22 + 120), unitLabel: '/set', group: 'equip' },
-        { key: 'hw_combiner', qty: combinerQty, unitPrice: 85, unitLabel: '/box', group: 'equip' },
-        { key: 'hw_grounding', qty: 1, unitPrice: r2(150 + systemKw * 8), unitLabel: '/set', group: 'equip' },
-        { key: 'hw_meter', qty: 1, unitPrice: 220, unitLabel: '/unit', group: 'equip' },
-        { key: 'hw_conduit', qty: 1, unitPrice: r2(systemKw * 15 + 60), unitLabel: '/set', group: 'equip' },
+        { key: isGround ? 'hw_mounting_ground' : 'hw_mounting_roof', qty: numPanels, unitPrice: isGround ? 55 : 32, ulKey: 'ul_panel', group: 'equip' },
+        { key: 'hw_stabilizers', qty: numPanels, unitPrice: isGround ? 12 : 8, ulKey: 'ul_pc', group: 'equip' },
+        { key: 'hw_wiring_dc', qty: numPanels, unitPrice: r2((systemKw * 28 + numPanels * 4 + 80) / numPanels), ulKey: 'ul_panel', group: 'equip' },
+        { key: 'hw_wiring_ac', qty: 1, unitPrice: r2(systemKw * 22 + 120), ulKey: 'ul_set', group: 'equip' },
+        { key: 'hw_combiner', qty: combinerQty, unitPrice: 85, ulKey: 'ul_box', group: 'equip' },
+        { key: 'hw_grounding', qty: 1, unitPrice: r2(150 + systemKw * 8), ulKey: 'ul_set', group: 'equip' },
+        { key: 'hw_meter', qty: 1, unitPrice: 220, ulKey: 'ul_unit', group: 'equip' },
+        { key: 'hw_conduit', qty: 1, unitPrice: r2(systemKw * 15 + 60), ulKey: 'ul_set', group: 'equip' },
         // ── Installation ──
-        { key: 'hw_labor', qty: 1, unitPrice: r2(systemKw * (isGround ? 250 : 200) + 400), unitLabel: '/total', group: 'install' },
-        { key: 'hw_permits', qty: 1, unitPrice: r2(180 + systemKw * 15), unitLabel: '/total', group: 'install' },
-        { key: 'hw_design', qty: 1, unitPrice: r2(200 + systemKw * 20), unitLabel: '/total', group: 'install' },
+        { key: 'hw_labor', qty: 1, unitPrice: r2(systemKw * (isGround ? 250 : 200) + 400), ulKey: 'ul_total', group: 'install' },
+        { key: 'hw_permits', qty: 1, unitPrice: r2(180 + systemKw * 15), ulKey: 'ul_total', group: 'install' },
+        { key: 'hw_design', qty: 1, unitPrice: r2(200 + systemKw * 20), ulKey: 'ul_total', group: 'install' },
     );
 
     // Cost = qty × unitPrice for every item
@@ -1292,7 +1298,7 @@ function renderHwTable(hwItems, excl, equipCost, installCost, totalCost, exclude
         const label = t(item.key);
         const exStyle = item.excluded ? ' style="text-decoration:line-through;opacity:0.45"' : '';
         const exTag = item.excluded ? ` <span style="color:var(--danger);font-size:0.7rem;font-weight:600">${t('exc_tag')}</span>` : '';
-        const unitLabel = item.unitLabel || '';
+        const unitLabel = item.ulKey ? t(item.ulKey) : '';
         hwRows += `<tr${exStyle}>
             <td>${label}${exTag}</td>
             <td style="text-align:center">
