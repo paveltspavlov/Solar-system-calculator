@@ -858,7 +858,7 @@ function t(key) { return (T[LANG] && T[LANG][key]) || (T.en[key]) || key; }
 function setLang(lang) {
     LANG = lang;
     document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent.trim() === lang.toUpperCase()));
-    document.getElementById('pageTitle').textContent = t('title') + ' – Bulgaria';
+    document.getElementById('pageTitle').textContent = t('title') + (lang === 'bg' ? ' – България' : ' – Bulgaria');
     // Update all data-t elements
     document.querySelectorAll('[data-t]').forEach(el => {
         const key = el.getAttribute('data-t');
@@ -872,6 +872,10 @@ function setLang(lang) {
     // Re-show mode info
     const modeInfo = document.getElementById('modeInfo');
     modeInfo.innerHTML = energyMode === 'net' ? t('info_net') : t('info_self');
+    // Re-run calculation if results are visible so dynamic content updates language
+    if (document.getElementById('results').style.display === 'block') {
+        calculate();
+    }
 }
 
 function populateOblasts() {
