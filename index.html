@@ -187,23 +187,26 @@
         .sources-list li:last-child { border-bottom: none; }
         .sources-list li strong { color: var(--text); font-weight: 600; }
         .sources-list li .src-range { color: var(--accent); font-weight: 500; }
-        /* Inline editable unit price */
-        .hw-table .unit-price-input {
-            width: 80px; background: rgba(56,189,248,0.08); border: 1px solid var(--accent);
+        /* Inline editable inputs in hw table */
+        .hw-table .hw-input {
+            background: rgba(56,189,248,0.08); border: 1px solid var(--accent);
             border-radius: 6px; padding: 5px 8px; color: var(--accent); font-size: 0.85rem;
             text-align: right; font-weight: 600; cursor: text;
             transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
         }
-        .hw-table .unit-price-input:hover {
+        .hw-table .hw-input:hover {
             background: rgba(56,189,248,0.14); border-color: var(--primary);
         }
-        .hw-table .unit-price-input:focus {
+        .hw-table .hw-input:focus {
             outline: none; border-color: var(--primary);
             background: rgba(245,158,11,0.10);
             box-shadow: 0 0 0 2px rgba(245,158,11,0.25);
         }
+        .hw-table .unit-price-input { width: 80px; }
+        .hw-table .qty-input { width: 52px; text-align: center; }
         .hw-table .unit-price-cell { white-space: nowrap; }
         .hw-table th.th-unitprice { text-align: right; }
+        .hw-table th.th-qty { text-align: center; }
         .edit-hint {
             text-align: center; font-size: 0.78rem; color: var(--accent);
             margin-bottom: 10px; opacity: 0.8;
@@ -717,7 +720,7 @@ const T = {
     exc_optimizers: "Power Optimizers",
     lbl_optimizers: "Power Optimizers?",
     btn_recalc: "Recalculate with Custom Prices",
-    edit_hint: "Click any blue unit price to edit it, then press \"Recalculate\" to update all totals",
+    edit_hint: "Edit any quantity or unit price below, then press \"Recalculate\" to update all totals",
     // Sources
     src_title: "Price Sources & References",
     src_panels_label: "Solar Panels (mono-facial):",
@@ -814,7 +817,7 @@ const T = {
     exc_optimizers: "Оптимизатори на мощност",
     lbl_optimizers: "Оптимизатори на мощност?",
     btn_recalc: "Преизчисли с нови цени",
-    edit_hint: "Кликнете върху синята цена за единица, за да я редактирате, след което натиснете \"Преизчисли\"",
+    edit_hint: "Редактирайте количество или цена на единица, след което натиснете \"Преизчисли\" за обновяване",
     // Sources
     src_title: "Източници на цени и референции",
     src_panels_label: "Соларни панели (монофациални):",
@@ -1007,99 +1010,76 @@ function fmt(n, d=0) { return n.toLocaleString('en-US', { minimumFractionDigits:
 // ══════════════════════════════════════════════════════════
 //  HARDWARE COST MODEL
 // ══════════════════════════════════════════════════════════
-// Each item now returns: unitPrice (editable), qty, and a calc function for cost
-// unitLabel describes what the unit price represents (per panel, per kW, per kWh, etc.)
+// Every item: cost = qty × unitPrice. Both qty and unitPrice are editable.
+
+function r2(n) { return Math.round(n * 100) / 100; } // round to 2 decimals
 
 function getHardwareCosts(systemKw, panelW, numPanels, inverterType, withBattery, batteryKwh, isGround, isBifacial, withOptimizers) {
-    // Panel pricing per watt
+    // Panel pricing — per panel
     let panelPricePerW;
     if (isBifacial) {
         panelPricePerW = panelW <= 410 ? 0.28 : panelW <= 450 ? 0.31 : panelW <= 500 ? 0.36 : 0.40;
     } else {
         panelPricePerW = panelW <= 410 ? 0.22 : panelW <= 450 ? 0.25 : panelW <= 500 ? 0.30 : 0.34;
     }
-    // Convert to per-panel price for editability
-    const panelUnitPrice = Math.round(panelPricePerW * panelW * 100) / 100;
 
-    // Inverter per kW
-    const invRates = { string: 120, hybrid: 200, micro: 300 };
-    const invUnitPrice = invRates[inverterType];
-    const invQty = inverterType === 'micro' ? numPanels : Math.ceil(systemKw / 10);
+    // Inverter — for string/hybrid: qty = number of inverters, unitPrice = price per inverter
+    const invRates = { string: 120, hybrid: 200, micro: 300 }; // per kW base
+    let invQty, invUnit;
+    if (inverterType === 'micro') {
+        invQty = numPanels;
+        invUnit = r2(invRates.micro * systemKw / numPanels);
+    } else {
+        invQty = Math.max(1, Math.ceil(systemKw / 10));
+        invUnit = r2(invRates[inverterType] * systemKw / invQty);
+    }
 
-    // Battery per kWh + BMS
-    const batteryUnitPrice = 420;
-    const bmsUnitPrice = Math.round((180 + batteryKwh * 12) * 100 / 100); // flat for this config
+    // Battery — per battery unit (assume single pack)
+    const batteryUnitPrice = r2(420 * batteryKwh);
+    const bmsUnitPrice = r2(180 + batteryKwh * 12);
 
-    // Power optimizers per panel (SolarEdge P-series style)
-    const optimizerUnitPrice = 45; // ~€45 per optimizer
-
-    // Mounting per panel
-    const mountUnitPrice = isGround ? 55 : 32;
-    const mountBasePrice = isGround ? 400 : 0; // extra base for ground
-
-    // Stabilizers per panel
-    const stabUnitPrice = isGround ? 12 : 8;
-
-    // Wiring — use per-kW pricing for simplicity
-    const dcWireUnit = Math.round((systemKw * 28 + numPanels * 4 + 80) / systemKw * 100) / 100;
-    const acWireUnit = Math.round((systemKw * 22 + 120) / systemKw * 100) / 100;
-    const combinerUnit = 85; // per box
-    const combinerQty = Math.ceil(numPanels / 12);
-    const groundingUnit = Math.round((150 + systemKw * 8) * 100) / 100;
-    const conduitUnit = Math.round((systemKw * 15 + 60) / systemKw * 100) / 100;
-
-    const meterUnit = 220;
-
-    // Installation
-    const laborUnit = Math.round((systemKw * (isGround ? 250 : 200) + 400) / systemKw * 100) / 100;
-    const permitsUnit = Math.round((180 + systemKw * 15) * 100) / 100;
-    const designUnit = Math.round((200 + systemKw * 20) * 100) / 100;
+    // Combiner boxes
+    const combinerQty = Math.max(1, Math.ceil(numPanels / 12));
 
     const items = [
-        // Equipment — each has: key, qty, unitPrice, unitLabel, group
-        { key: isBifacial ? 'hw_panels_bi' : 'hw_panels', qty: numPanels, unitPrice: panelUnitPrice, unitLabel: '/panel', group: 'equip' },
-        { key: 'hw_inverter', qty: invQty, unitPrice: inverterType === 'micro' ? Math.round(invUnitPrice * systemKw / numPanels * 100)/100 : invUnitPrice, unitLabel: inverterType === 'micro' ? '/unit' : '/kW (\u00d7' + fmt(systemKw,1) + ')', group: 'equip', qtyIsFixed: inverterType !== 'micro', calcCost: inverterType !== 'micro' ? (up) => up * systemKw : null },
+        // ── Equipment ──
+        { key: isBifacial ? 'hw_panels_bi' : 'hw_panels', qty: numPanels, unitPrice: r2(panelPricePerW * panelW), unitLabel: '/panel', group: 'equip' },
+        { key: 'hw_inverter', qty: invQty, unitPrice: invUnit, unitLabel: '/unit', group: 'equip' },
     ];
 
     if (withOptimizers) {
-        items.push({ key: 'hw_optimizers', qty: numPanels, unitPrice: optimizerUnitPrice, unitLabel: '/panel', group: 'equip' });
+        items.push({ key: 'hw_optimizers', qty: numPanels, unitPrice: 45, unitLabel: '/panel', group: 'equip' });
     }
 
     if (withBattery) {
-        items.push({ key: 'hw_battery', qty: 1, unitPrice: Math.round(batteryUnitPrice * batteryKwh * 100)/100, unitLabel: `/pack (${batteryKwh} kWh)`, group: 'equip', qtyIsFixed: true });
-        items.push({ key: 'hw_bms', qty: 1, unitPrice: bmsUnitPrice, unitLabel: '/unit', group: 'equip' });
+        items.push(
+            { key: 'hw_battery', qty: 1, unitPrice: batteryUnitPrice, unitLabel: '/pack', group: 'equip' },
+            { key: 'hw_bms', qty: 1, unitPrice: bmsUnitPrice, unitLabel: '/unit', group: 'equip' },
+        );
     }
 
     items.push(
-        { key: isGround ? 'hw_mounting_ground' : 'hw_mounting_roof', qty: numPanels, unitPrice: mountUnitPrice, unitLabel: '/panel', group: 'equip', basePrice: mountBasePrice },
-        { key: 'hw_stabilizers', qty: numPanels, unitPrice: stabUnitPrice, unitLabel: '/panel', group: 'equip' },
-        { key: 'hw_wiring_dc', qty: 1, unitPrice: Math.round(dcWireUnit * systemKw * 100)/100, unitLabel: '/set', group: 'equip', qtyIsFixed: true },
-        { key: 'hw_wiring_ac', qty: 1, unitPrice: Math.round(acWireUnit * systemKw * 100)/100, unitLabel: '/set', group: 'equip', qtyIsFixed: true },
-        { key: 'hw_combiner', qty: combinerQty, unitPrice: combinerUnit, unitLabel: '/box', group: 'equip' },
-        { key: 'hw_grounding', qty: 1, unitPrice: groundingUnit, unitLabel: '/set', group: 'equip', qtyIsFixed: true },
-        { key: 'hw_meter', qty: 1, unitPrice: meterUnit, unitLabel: '/unit', group: 'equip', qtyIsFixed: true },
-        { key: 'hw_conduit', qty: 1, unitPrice: Math.round(conduitUnit * systemKw * 100)/100, unitLabel: '/set', group: 'equip', qtyIsFixed: true },
-        // Installation
-        { key: 'hw_labor', qty: 1, unitPrice: Math.round(laborUnit * systemKw * 100)/100, unitLabel: '/total', group: 'install', qtyIsFixed: true },
-        { key: 'hw_permits', qty: 1, unitPrice: permitsUnit, unitLabel: '/total', group: 'install', qtyIsFixed: true },
-        { key: 'hw_design', qty: 1, unitPrice: designUnit, unitLabel: '/total', group: 'install', qtyIsFixed: true },
+        { key: isGround ? 'hw_mounting_ground' : 'hw_mounting_roof', qty: numPanels, unitPrice: isGround ? 55 : 32, unitLabel: '/panel', group: 'equip' },
+        { key: 'hw_stabilizers', qty: numPanels, unitPrice: isGround ? 12 : 8, unitLabel: '/pc', group: 'equip' },
+        { key: 'hw_wiring_dc', qty: numPanels, unitPrice: r2((systemKw * 28 + numPanels * 4 + 80) / numPanels), unitLabel: '/panel', group: 'equip' },
+        { key: 'hw_wiring_ac', qty: 1, unitPrice: r2(systemKw * 22 + 120), unitLabel: '/set', group: 'equip' },
+        { key: 'hw_combiner', qty: combinerQty, unitPrice: 85, unitLabel: '/box', group: 'equip' },
+        { key: 'hw_grounding', qty: 1, unitPrice: r2(150 + systemKw * 8), unitLabel: '/set', group: 'equip' },
+        { key: 'hw_meter', qty: 1, unitPrice: 220, unitLabel: '/unit', group: 'equip' },
+        { key: 'hw_conduit', qty: 1, unitPrice: r2(systemKw * 15 + 60), unitLabel: '/set', group: 'equip' },
+        // ── Installation ──
+        { key: 'hw_labor', qty: 1, unitPrice: r2(systemKw * (isGround ? 250 : 200) + 400), unitLabel: '/total', group: 'install' },
+        { key: 'hw_permits', qty: 1, unitPrice: r2(180 + systemKw * 15), unitLabel: '/total', group: 'install' },
+        { key: 'hw_design', qty: 1, unitPrice: r2(200 + systemKw * 20), unitLabel: '/total', group: 'install' },
     );
 
-    // Calculate cost for each item
-    items.forEach(item => {
-        if (item.calcCost) {
-            item.cost = item.calcCost(item.unitPrice);
-        } else if (item.qtyIsFixed) {
-            item.cost = item.unitPrice;
-        } else {
-            item.cost = item.qty * item.unitPrice + (item.basePrice || 0);
-        }
-    });
+    // Cost = qty × unitPrice for every item
+    items.forEach(item => { item.cost = r2(item.qty * item.unitPrice); });
 
     return items;
 }
 
-// Store last calculation state so we can recalculate with edited prices
+// Store last calculation state so we can recalculate with edited prices/quantities
 let lastCalcState = null;
 
 // ══════════════════════════════════════════════════════════
@@ -1301,7 +1281,8 @@ function calculate() {
 // ══════════════════════════════════════════════════════════
 function renderHwTable(hwItems, excl, equipCost, installCost, totalCost, excludedTotal) {
     document.getElementById('editHint').style.display = '';
-    let hwRows = `<tr><th>${t('th_component')}</th><th>${t('th_qty')}</th><th class="th-unitprice">${t('th_unitprice')}</th><th style="text-align:right">${t('th_cost')}</th></tr>`;
+    document.getElementById('recalcBtn').classList.add('hidden');
+    let hwRows = `<tr><th>${t('th_component')}</th><th class="th-qty">${t('th_qty')}</th><th class="th-unitprice">${t('th_unitprice')}</th><th style="text-align:right">${t('th_cost')}</th></tr>`;
     let lastGroup = '';
     hwItems.forEach((item, idx) => {
         if (item.group !== lastGroup && lastGroup === 'equip') {
@@ -1309,16 +1290,16 @@ function renderHwTable(hwItems, excl, equipCost, installCost, totalCost, exclude
         }
         lastGroup = item.group;
         const label = t(item.key);
-        const qtyStr = item.qty > 1 ? item.qty : '\u2014';
         const exStyle = item.excluded ? ' style="text-decoration:line-through;opacity:0.45"' : '';
         const exTag = item.excluded ? ` <span style="color:var(--danger);font-size:0.7rem;font-weight:600">${t('exc_tag')}</span>` : '';
-        const unitPriceVal = item.unitPrice.toFixed(2);
         const unitLabel = item.unitLabel || '';
         hwRows += `<tr${exStyle}>
             <td>${label}${exTag}</td>
-            <td style="text-align:center">${qtyStr}</td>
+            <td style="text-align:center">
+                <input type="number" class="hw-input qty-input" data-idx="${idx}" value="${item.qty}" step="1" min="0" onchange="onHwInputChange()">
+            </td>
             <td class="unit-price-cell" style="text-align:right">
-                &euro;<input type="number" class="unit-price-input" data-idx="${idx}" value="${unitPriceVal}" step="0.01" min="0" onchange="onUnitPriceChange(this)">
+                &euro;<input type="number" class="hw-input unit-price-input" data-idx="${idx}" value="${item.unitPrice.toFixed(2)}" step="0.01" min="0" onchange="onHwInputChange()">
                 <span style="font-size:0.7rem;color:var(--text-muted)">${unitLabel}</span>
             </td>
             <td style="text-align:right">&euro;${fmt(item.cost)}</td>
@@ -1332,34 +1313,31 @@ function renderHwTable(hwItems, excl, equipCost, installCost, totalCost, exclude
     document.getElementById('hwTable').innerHTML = hwRows;
 }
 
-function onUnitPriceChange(input) {
-    // Show the recalc button when any price is edited
+function onHwInputChange() {
     document.getElementById('recalcBtn').classList.remove('hidden');
 }
 
 function recalcFromPrices() {
     if (!lastCalcState) return;
     const st = lastCalcState;
-    const inputs = document.querySelectorAll('#hwTable .unit-price-input');
 
-    // Update unit prices from inputs
-    inputs.forEach(inp => {
+    // Read qty inputs
+    document.querySelectorAll('#hwTable .qty-input').forEach(inp => {
         const idx = parseInt(inp.dataset.idx);
-        const newPrice = parseFloat(inp.value);
-        if (!isNaN(newPrice) && newPrice >= 0) {
-            st.hwItems[idx].unitPrice = newPrice;
-        }
+        const val = parseFloat(inp.value);
+        if (!isNaN(val) && val >= 0) st.hwItems[idx].qty = val;
     });
 
-    // Recalculate costs
+    // Read unit price inputs
+    document.querySelectorAll('#hwTable .unit-price-input').forEach(inp => {
+        const idx = parseInt(inp.dataset.idx);
+        const val = parseFloat(inp.value);
+        if (!isNaN(val) && val >= 0) st.hwItems[idx].unitPrice = val;
+    });
+
+    // Recalculate: cost = qty × unitPrice for every item
     st.hwItems.forEach(item => {
-        if (item.calcCost) {
-            item.cost = item.calcCost(item.unitPrice);
-        } else if (item.qtyIsFixed) {
-            item.cost = item.unitPrice;
-        } else {
-            item.cost = item.qty * item.unitPrice + (item.basePrice || 0);
-        }
+        item.cost = r2(item.qty * item.unitPrice);
         item.excluded = isItemExcluded(item.key, st.excl);
     });
 
